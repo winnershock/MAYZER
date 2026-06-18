@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  # ── Base de datos MySQL
+  db:
+    image: mysql:8.0
+    container_name: mayzer_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-mayzer_root_2025}
+      MYSQL_DATABASE: mayzer_db
+      MYSQL_USER: mayzer_user
+      MYSQL_PASSWORD: ${DB_PASSWORD:-mayzer_pass_2025}
+    volumes:
+      - mayzer_db_data:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    ports:
+      # Puerto MySQL NO expuesto al host — solo accesible dentro de la red Docker
+      # - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 10s
+      retries: 5
+
+  # ── Backend Node.js
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: mayzer_backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: mayzer_user
+      DB_PASSWORD: ${DB_PASSWORD:-mayzer_pass_2025}
+      DB_NAME: mayzer_db
+      JWT_SECRET: ${JWT_SECRET:-cambiar_en_produccion_32_chars!!}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-cambiar_refresh_32_chars_produc!!}
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USER: ${MAIL_USER}
+      MAIL_PASS: ${MAIL_PASS}
+      MAIL_FROM: ${MAIL_FROM}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-cambiar_clave_32_chars_produccion}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
+      PORT: 3001
+      SENA_NOMBRE: "SENA Sede Palmira"
+      SENA_DIRECCION: "Calle 40 # 27-267, Palmira, Valle del Cauca"
+      SENA_TELEFONO: "(2) 272 2000"
+    volumes:
+      - mayzer_uploads:/app/uploads
+    ports:
+      - "3001:3001"
+
+  # ── Frontend React (Nginx)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: mayzer_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+
+volumes:
+  mayzer_db_data:
+  mayzer_uploads:

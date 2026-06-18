@@ -1,0 +1,12 @@
+
+.contador    { font-size: 11px; color: var(--text-tertiary); text-align: right; margin-top: 4px; }
+.contador--ok{ color: var(--green); }
+.hint-text   { font-size: 12px; color: var(--text-tertiary); margin-top: 6px; }
+
+.contador    { color: var(--text-tertiary); font-size: 11px; }
+.btn-eliminar{ background: none; border: none; cursor: pointer; color: #dc2626;
+               padding: 4px 8px; border-radius: 8px; line-height: 0; }
+
+.textarea-motivo { min-height: 120px; }
+.btn-eliminar { background: none; border: none; cursor: pointer; color: #dc2626; padding: 4px 8px; border-radius: 8px; line-height: 0; }
+.alert-mb { margin-bottom: 16px; }

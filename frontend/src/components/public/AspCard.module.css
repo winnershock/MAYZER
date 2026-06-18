@@ -1,0 +1,19 @@
+
+.required-mark { color: var(--danger); margin-left: 2px; }
+.form-hint     { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; }
+.campo-grid    { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+.required-mark { color: #FF6719; }
+.hidden        { display: none; }
+.btn-upload    { background: #FF6719; color: #fff; border: none; border-radius: 8px;
+                 padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer;
+                 font-family: inherit; }
+.btn-remove    { background: none; border: 1px solid #ddd; border-radius: 8px;
+                 padding: 8px 10px; cursor: pointer; color: #888; font-family: inherit; }
+.file-actions  { display: flex; gap: 8px; flex-shrink: 0; }
+
+.btn-eliminar { background: none; border: none; cursor: pointer; color: #dc2626; padding: 4px 8px; border-radius: 8px; line-height: 0; }
+
+@media (max-width: 480px) {
+  .campo-grid { grid-template-columns: 1fr; }
+}

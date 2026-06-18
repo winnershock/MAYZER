@@ -1,0 +1,82 @@
+/* ─────────────────────────────────────────────────────────
+   Empresas.module.css — Estilos específicos de la página de Empresas
+   Depende de: tokens.css (variables CSS globales)
+───────────────────────────────────────────────────────── */
+
+/* ── FilaDetalle — fila de información en el panel de detalle ── */
+.filaDetalle {
+  display: flex;
+  gap: 10px;
+  font-size: 13px;
+  padding: 8px 12px;
+  background: var(--bg);
+  border-radius: var(--r-sm);
+}
+.filaDetalleLabel {
+  font-weight: 700;
+  min-width: 160px;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+.filaDetalleValor {
+  word-break: break-word;
+}
+
+/* ── Modal de detalle de empresa ── */
+.modalDetalle {
+  max-width: 680px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.modalDetalleTitle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ── Sección de detalle ── */
+.seccion {
+  margin-bottom: 16px;
+}
+.seccionLabel {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-tertiary);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 6px;
+  margin-bottom: 8px;
+}
+.seccionGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+/* ── Tabla de empresas ── */
+.direccion {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+.nit {
+  font-family: monospace;
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+.email {
+  font-size: 12px;
+}
+.contactoWrap {
+  font-size: 13px;
+}
+.cargo {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+.colCentro {
+  text-align: center;
+}
+
+.total-registros { font-size: 12px; color: var(--text-tertiary); }

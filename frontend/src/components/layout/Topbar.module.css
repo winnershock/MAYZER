@@ -1,0 +1,86 @@
+/* ─────────────────────────────────────────────────────────
+   Topbar.module.css — Barra superior de página
+   Depende de: tokens.css
+───────────────────────────────────────────────────────── */
+
+.topbar {
+  height: var(--topbar-h);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 1px 0 var(--border), 0 2px 8px rgba(15,15,20,.04);
+  display: flex;
+  align-items: center;
+  padding: 0 32px;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+.topbar-left {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.topbar-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.topbar-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -.025em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.topbar-sub {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.topbar-divider {
+  width: 1px;
+  height: 28px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.topbar-pill {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 13px 5px 10px;
+  background: var(--brand-light);
+  border-radius: 99px;
+  border: 1px solid rgba(255,103,25,.18);
+  flex-shrink: 0;
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+
+.topbar-pill:hover {
+  background: var(--brand-muted);
+  border-color: rgba(255,103,25,.28);
+}
+
+.topbar-pill img {
+  height: 16px;
+  width: auto;
+}
+
+.topbar-pill span {
+  font-size: 11px;
+  color: var(--brand-text);
+  font-weight: 660;
+  letter-spacing: .025em;
+  white-space: nowrap;
+}

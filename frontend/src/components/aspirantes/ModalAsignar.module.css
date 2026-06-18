@@ -1,0 +1,8 @@
+/* ModalAsignar.module.css – Inline styles migrados */
+.grupo-sel-box   { background: var(--brand-muted); border: 1px solid rgba(255,103,25,.2);
+                   border-radius: var(--r-md); padding: 12px 14px; margin-bottom: 16px; }
+.alert-flex      { margin-bottom: 14px; display: flex; align-items: flex-start; gap: 10px; }
+.alert-icon      { flex-shrink: 0; margin-top: 2px; }
+.alert-text      { font-size: 13px; }
+.alert-mt        { margin-top: 8px; }
+.nota-texto      { font-size: 12px; color: var(--text-tertiary); margin-bottom: 12px; }

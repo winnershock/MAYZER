@@ -1,0 +1,37 @@
+/* ─────────────────────────────────────────────────────────
+   layout.css — Layout Primitives
+   Estructuras de página: app-layout, main-area, page-content,
+   page-header, section-two y utilidades de layout. Depende de: tokens.css
+───────────────────────────────────────────────────────── */
+
+/* App shell */
+.app-layout   { display: flex; height: 100vh; overflow: hidden; }
+.main-area    { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+.page-content { flex: 1; overflow-y: auto; padding: 32px 36px; }
+
+/* Page header */
+.page-header    { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 28px; }
+.page-header h1 { font-size: 22px; font-weight: 740; letter-spacing: -.025em; }
+.page-header p  { color: var(--text-tertiary); margin-top: 4px; font-size: 13px; }
+.page-inner     { max-width: 100%; }
+
+/* Section helpers */
+.section-two { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 20px; }
+
+/* Stat grid — 3 columns por defecto, escala a 4 con más espacio */
+.stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }
+@media (min-width: 1280px) { .stat-grid { grid-template-columns: repeat(3, 1fr); } }
+
+/* Bar chart global (dashboard) */
+.bar-chart { display: flex; flex-direction: column; gap: 10px; }
+.bar-row   { display: flex; align-items: center; gap: 12px; }
+.bar-label { width: 160px; font-size: 12.5px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
+.bar-track { flex: 1; background: var(--bg); border-radius: 6px; height: 20px; overflow: hidden; }
+.bar-fill  { height: 100%; background: var(--brand); border-radius: 6px; min-width: 6px; transition: width 0.5s var(--ease-out); }
+.bar-val   { width: 30px; text-align: right; font-size: 12px; font-weight: 700; color: var(--text-secondary); flex-shrink: 0; }
+
+/* Responsive breakpoints */
+@media (max-width: 1100px) { .stat-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 900px)  { .section-two { grid-template-columns: 1fr; } .form-grid { grid-template-columns: 1fr; } }
+@media (max-width: 640px)  { .stat-grid { grid-template-columns: 1fr; } .page-content { padding: 16px; } }
+

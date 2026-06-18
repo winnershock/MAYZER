@@ -1,0 +1,30 @@
+/* ─────────────────────────────────────────────────────────
+   tables.css — Tablas de datos: estilos de table, thead, tbody, data-table y td-actions.
+   Depende de: tokens.css
+───────────────────────────────────────────────────────── */
+
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th { padding: 10px 14px; text-align: left; color: var(--text-tertiary); font-weight: 620; font-size: 11px; text-transform: uppercase; letter-spacing: .07em; border-bottom: 1px solid var(--border); white-space: nowrap; background: var(--bg-subtle); }
+tbody td { padding: 12px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; transition: background var(--dur-fast); }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr { transition: background var(--dur-fast) var(--ease); }
+tbody tr:hover td { background: #f6f6ff; }
+.td-actions { display: flex; gap: 5px; align-items: center; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.data-table thead th { padding: 10px 16px; text-align: left; font-size: 11px; font-weight: 640; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .06em; border-bottom: 2px solid var(--border); background: var(--bg-subtle); }
+.data-table thead th:first-child { border-radius: var(--r-xs) 0 0 0; }
+.data-table thead th:last-child { border-radius: 0 var(--r-xs) 0 0; }
+.data-table tbody td { padding: 12px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.data-table tbody tr:last-child td { border-bottom: none; }
+.data-table tbody tr { transition: background var(--dur-fast) var(--ease); }
+.data-table tbody tr:hover td { background: #f6f6ff; }
+
+/* Columna de acciones */
+.data-table .col-actions { white-space: nowrap; }
+.data-table .col-actions .btn-ghost { opacity: .65; }
+.data-table .col-actions .btn-ghost:hover { opacity: 1; }
+
+/* Tabla dentro de card — sin borde exterior extra */
+.card > .data-table,
+.card table { border-radius: 0; }

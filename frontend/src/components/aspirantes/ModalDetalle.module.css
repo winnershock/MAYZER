@@ -1,0 +1,22 @@
+/* ModalDetalle.module.css – Inline styles migrados */
+.modal-wide       { max-width: 780px; max-height: 90vh; overflow-y: auto; }
+.modal-title-row  { display: flex; align-items: center; gap: 12px; }
+.campo-row        { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; padding: 3px 0; }
+.campo-label      { font-weight: 700; min-width: 160px; color: var(--text-tertiary); flex-shrink: 0; }
+.campo-valor      { word-break: break-word; }
+.seccion          { margin-bottom: 16px; }
+.seccion-titulo   { font-size: 12px; font-weight: 700; color: var(--text-tertiary);
+                    text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
+.campos-grid      { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.grupo-asignado   { margin-top: 12px; }
+
+.fila-row      { display: flex; gap: 10px; font-size: 13px; padding: 8px 12px;
+                 background: var(--bg); border-radius: var(--r-sm); }
+.seccion-titulo{ font-size: 11px; font-weight: 800; color: var(--text-tertiary);
+                 letter-spacing: 1px; text-transform: uppercase;
+                 border-bottom: 1px solid var(--border); padding-bottom: 6px; margin-bottom: 8px; }
+
+@media (max-width: 600px) {
+  .campos-grid { grid-template-columns: 1fr; }
+  .campo-label { min-width: unset; }
+}

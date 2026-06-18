@@ -1,0 +1,97 @@
+/* ─────────────────────────────────────────────────────────
+   Grupos.module.css — Estilos específicos de la página de Grupos
+   Depende de: tokens.css (variables CSS globales)
+───────────────────────────────────────────────────────── */
+
+/* ── Indicador de punto de color del instructor ── */
+.instructorDot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(0, 0, 0, 0.14);
+  flex-shrink: 0;
+  margin-right: 4px;
+}
+
+/* ── Botones de acción de tabla (ver, gestionar, excel, editar, eliminar) ── */
+.btnAccion {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 6px;
+  padding: 3px 9px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font);
+  white-space: nowrap;
+  transition: background 0.12s, box-shadow 0.12s;
+  border-style: solid;
+  border-width: 1px;
+}
+
+.btnVer {
+  background: var(--blue-bg);
+  color: var(--blue);
+  border-color: var(--blue-border);
+}
+.btnVer:hover {
+  background: #dbeafe;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
+}
+
+.btnGestionar {
+  background: var(--brand-light);
+  color: var(--brand-text);
+  border-color: rgba(255, 103, 25, 0.22);
+}
+.btnGestionar:hover {
+  background: var(--brand-muted);
+  box-shadow: 0 2px 8px rgba(255, 103, 25, 0.18);
+}
+
+.btnExcel {
+  background: var(--green-bg);
+  color: var(--green);
+  border-color: var(--green-border);
+}
+.btnExcel:hover {
+  background: #dcfce7;
+  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.15);
+}
+
+.btnEditar {
+  background: var(--bg);
+  color: var(--text-secondary);
+  border-color: var(--border2);
+}
+.btnEditar:hover {
+  background: var(--border);
+}
+
+.btnEliminar {
+  background: var(--red-bg);
+  color: var(--red);
+  border-color: var(--red-border);
+}
+.btnEliminar:hover {
+  background: #fee2e2;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.12);
+}
+
+/* ── Contenedor de acciones de fila ── */
+.accionesRow {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+
+/* ── Inline styles migrados a CSS ── */
+.enCursoTag      { color: var(--blue); font-weight: 700; }
+.cardTableWrap   { overflow: auto; }
+.codigoBadge     { font-family: monospace; font-size: 12px; color: #b34400; background: #fff8f3;
+                   border: 1px solid rgba(255,103,25,.18); border-radius: 99px; padding: 2px 10px;
+                   font-weight: 600; letter-spacing: 0.03em; }
+.tdNombre        { font-weight: 600; }
+.tdCentro        { text-align: center; }

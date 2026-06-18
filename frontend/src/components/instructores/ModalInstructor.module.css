@@ -1,0 +1,12 @@
+/* ModalInstructor.module.css – Inline styles migrados */
+.alert-mb        { margin-bottom: 16px; }
+.label-opcional  { color: var(--text-tertiary); font-weight: 400; }
+.form-check-row  { display: flex; align-items: center; gap: 10px; }
+.label-inline    { margin-bottom: 0; }
+.input-check     { margin-right: 8px; }
+.color-row       { display: flex; align-items: center; gap: 10px; }
+.input-color     { width: 42px; height: 32px; padding: 2px; border: 1px solid var(--border2);
+                   border-radius: 6px; cursor: pointer; }
+.color-hint      { font-size: 12px; color: var(--text-tertiary); }
+.btn-reset-color { background: none; border: none; cursor: pointer; font-size: 11px;
+                   color: var(--danger); padding: 0; }

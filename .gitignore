@@ -1,0 +1,31 @@
+# ── Dependencias ──────────────────────────────────────────
+node_modules/
+**/node_modules/
+
+# ── Variables de entorno — NUNCA compartir ────────────────
+.env
+.env.*
+!.env.example
+
+# ── Builds ────────────────────────────────────────────────
+dist/
+build/
+
+# ── Logs ──────────────────────────────────────────────────
+*.log
+logs/
+npm-debug.log*
+
+# ── Uploads y archivos generados ──────────────────────────
+backend/uploads/
+backend/tmp/
+
+# ── Sistema operativo ─────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── IDEs ──────────────────────────────────────────────────
+.vscode/
+.idea/
+*.suo
+*.ntvs*

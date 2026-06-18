@@ -1,0 +1,77 @@
+/* ─────────────────────────────────────────────────────────
+   inicio.module.css — Dashboard Inicio
+   Estilos específicos de los list-items del panel de inicio.
+   Depende de: tokens.css
+───────────────────────────────────────────────────────── */
+
+.inicio-list-item { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; gap: 14px; align-items: center; cursor: pointer; transition: background .15s; }
+.inicio-list-item:last-child { border-bottom: none; }
+.inicio-list-icon { width: 42px; height: 42px; border-radius: var(--r-sm); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.inicio-list-icon--sol   { background: var(--brand-muted); }
+.inicio-list-icon--grupo { background: var(--blue-bg); }
+.inicio-list-info  { flex: 1; min-width: 0; }
+.inicio-list-title { font-weight: 700; font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.inicio-list-sub   { font-size: 12px; color: var(--text-tertiary); margin-top: 3px; }
+.inicio-list-meta  { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
+.inicio-list-date  { font-size: 11px; color: var(--subtle); }
+.inicio-list-item:hover { background: var(--brand-light); }
+
+/* ── Inline styles migrados a CSS ── */
+.inicio-empty-lg   { padding: 48px; }
+.inicio-empty-md   { padding: 32px; }
+.inicio-section-two { margin-bottom: 18px; }
+.inicio-card-body-flush { padding: 0; }
+.inicio-resumen-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.inicio-resumen-grid--mb { margin-bottom: 24px; }
+.inicio-resumen-item { text-align: center; padding: 18px 12px; background: var(--bg);
+                       border-radius: var(--r-lg); border: 1px solid var(--border); }
+.inicio-resumen-value { font-size: 32px; font-weight: 900; letter-spacing: -.04em; line-height: 1; }
+.inicio-resumen-label { font-size: 12px; color: var(--text-tertiary); margin-top: 6px;
+                        font-weight: 650; text-transform: uppercase; letter-spacing: .06em; }
+.inicio-cursos-title { font-size: 11.5px; font-weight: 700; color: var(--text-tertiary);
+                       text-transform: uppercase; letter-spacing: .7px; margin-bottom: 14px; }
+
+@media (max-width: 768px) {
+  .inicio-resumen-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+  .inicio-resumen-grid { grid-template-columns: 1fr; }
+}
+
+/* ── Header del dashboard ── */
+.inicio-header {
+  background: linear-gradient(135deg, var(--brand-light) 0%, var(--surface) 60%);
+  border: 1px solid rgba(255, 103, 25, 0.12);
+  border-radius: var(--r-lg);
+  padding: 24px 28px;
+  margin-bottom: 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.inicio-header-title {
+  font-size: 26px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  letter-spacing: -.03em;
+}
+.inicio-header-sub {
+  color: var(--text-tertiary);
+  margin-top: 6px;
+  font-size: 13.5px;
+  text-transform: capitalize;
+}
+.inicio-header-actions {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+@media (max-width: 600px) {
+  .inicio-header { flex-direction: column; align-items: flex-start; }
+  .inicio-header-title { font-size: 20px; }
+}

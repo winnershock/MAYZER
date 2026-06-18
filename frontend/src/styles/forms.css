@@ -1,0 +1,78 @@
+/* ─────────────────────────────────────────────────────────
+   forms.css — Controles de formulario: inputs, selects, textareas, labels, form-grid
+   y filtros de búsqueda (filters-bar).
+   Depende de: tokens.css
+───────────────────────────────────────────────────────── */
+
+/* ── Form primitives ── */
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-grid  { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-full  { grid-column: 1 / -1; }
+label { font-size: 12px; font-weight: 620; color: var(--text-secondary); letter-spacing: .01em; }
+label .required { color: var(--red); margin-left: 2px; }
+input, select, textarea { border: 1px solid var(--border2); border-radius: var(--r-sm); padding: 8.5px 12px; font-size: 13px; font-family: var(--font); outline: none; width: 100%; background: var(--surface); color: var(--text-primary); transition: border-color var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease); -webkit-appearance: none; appearance: none; }
+input:focus, select:focus, textarea:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(255,103,25,.1); }
+input::placeholder, textarea::placeholder { color: var(--text-tertiary); }
+textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239898b0' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 30px; }
+.form-section-title { font-size: 11px; font-weight: 680; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 6px; }
+
+/* ── Filters bar ── */
+.filters-bar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  padding: 11px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-xs);
+}
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.filter-group label {
+  font-size: 10.5px;
+  color: var(--text-tertiary);
+  font-weight: 640;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  white-space: nowrap;
+}
+.filter-input {
+  width: auto;
+  min-width: 140px;
+  height: 34px;
+  padding: 0 30px 0 10px;
+  font-size: 13px;
+  border: 1px solid var(--border2);
+  border-radius: var(--r-sm);
+  background: var(--bg);
+  color: var(--text-primary);
+  transition: border-color var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
+}
+.filter-input:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(255,103,25,.1);
+  outline: none;
+}
+.filter-search {
+  min-width: 240px;
+  padding-right: 12px;
+}
+.filters-end {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+@media (max-width: 640px) {
+  .filters-bar { padding: 10px 12px; gap: 8px; }
+  .filter-input, .filter-search { min-width: 100%; width: 100%; }
+  .filters-end { margin-left: 0; width: 100%; }
+}

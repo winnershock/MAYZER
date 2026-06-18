@@ -1,0 +1,19 @@
+
+/* ModalDetalleGrupo.module.css – Inline styles migrados */
+.campo-fila    { display: flex; gap: 8px; font-size: 13px; padding: 4px 0; }
+.campo-lbl     { font-weight: 700; min-width: 130px; color: var(--text-tertiary); flex-shrink: 0; }
+.asp-lista     { display: flex; flex-direction: column; gap: 6px; max-height: 300px; overflow-y: auto; }
+.asp-item      { display: flex; align-items: center; gap: 10px; padding: 8px 12px;
+                 background: var(--bg); border-radius: 8px; border: 1px solid var(--border); font-size: 13px; }
+.campo-grid    { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+
+.datos-grid        { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
+.dato-box          { background: var(--bg); padding: 10px 14px; border-radius: var(--r-sm); }
+.dato-key          { font-size: 11px; color: var(--text-tertiary); font-weight: 700;
+                     margin-bottom: 2px; text-transform: uppercase; }
+.dato-val          { font-size: 13px; font-weight: 600; }
+.asp-seccion-titulo{ font-weight: 700; font-size: 14px; margin-bottom: 10px; }
+
+@media (max-width: 600px) {
+  .datos-grid { grid-template-columns: 1fr; }
+}

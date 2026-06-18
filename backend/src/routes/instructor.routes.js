@@ -1,0 +1,22 @@
+/**
+ * routes/instructor.routes.js
+ * Responsabilidad : Endpoints de instructores e historial de asignaciones.
+ * Exporta         : router Express
+ * Usado en        : routes/index.js  →  /api/instructores
+ * Depende de      : controllers/instructor.controller.js, middleware/auth.middleware.js
+ */
+const express = require('express');
+const { autenticar, soloAdmin } = require('../middleware/auth.middleware');
+const ctrl = require('../controllers/instructor.controller');
+
+const router = express.Router();
+router.use(autenticar);
+
+router.get('/',                   ctrl.listar);
+router.post('/',    soloAdmin,    ctrl.crear);
+// Rutas con subrutas específicas ANTES de las genéricas /:id
+router.get('/:id/historial',      ctrl.historial);
+router.put('/:id',  soloAdmin,    ctrl.editar);
+router.delete('/:id', soloAdmin,  ctrl.desactivar);
+
+module.exports = router;

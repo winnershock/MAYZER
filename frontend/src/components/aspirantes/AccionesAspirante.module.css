@@ -1,0 +1,65 @@
+/* ─────────────────────────────────────────────────────────
+   AccionesAspirante.css
+   Estilos de los botones de acción por fila de aspirante.
+   Depende de: styles/tokens.css (variables globales)
+───────────────────────────────────────────────────────── */
+
+.asp-acciones {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.asp-accion-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 9px;
+  font-size: 11px;
+  font-weight: 640;
+  cursor: pointer;
+  font-family: var(--font);
+  transition: background .12s, transform .1s, box-shadow .12s;
+  white-space: nowrap;
+  letter-spacing: .01em;
+}
+.asp-accion-btn:hover  { transform: translateY(-1px); }
+.asp-accion-btn:active { transform: none; }
+
+.asp-accion-detalle {
+  background: var(--bg);
+  color: var(--text-secondary);
+  border: 1px solid var(--border2);
+  padding: 4px 7px;
+}
+.asp-accion-detalle:hover { background: var(--border); }
+
+.asp-accion-aceptar {
+  background: var(--green-bg);
+  color: var(--green);
+  border: 1px solid var(--green-border);
+}
+.asp-accion-aceptar:hover { background: #dcfce7; box-shadow: 0 2px 8px rgba(22,163,74,.15); }
+
+.asp-accion-rechazar {
+  background: var(--red-bg);
+  color: var(--red);
+  border: 1px solid var(--red-border);
+}
+.asp-accion-rechazar:hover { background: #fee2e2; box-shadow: 0 2px 8px rgba(220,38,38,.15); }
+
+.asp-accion-asignar {
+  background: var(--brand-light);
+  color: var(--brand-text);
+  border: 1px solid rgba(255,103,25,.22);
+}
+.asp-accion-asignar:hover { background: var(--brand-muted); box-shadow: 0 2px 8px rgba(255,103,25,.18); }
+
+.asp-accion-restablecer {
+  background: var(--blue-bg);
+  color: var(--blue);
+  border: 1px solid var(--blue-border);
+}
+.asp-accion-restablecer:hover { background: #dbeafe; box-shadow: 0 2px 8px rgba(37,99,235,.15); }

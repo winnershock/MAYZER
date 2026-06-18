@@ -1,0 +1,367 @@
+/* ─────────────────────────────────────────────────────────
+   Sidebar.module.css  v2.0
+   Paleta actualizada: fondo blanco, texto oscuro, mantiene
+   el naranja corporativo como acento principal.
+   Depende de: tokens.css
+───────────────────────────────────────────────────────── */
+
+/* ══════════════════════════════════════════
+   Shell
+══════════════════════════════════════════ */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--sidebar-bg);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-right: 1px solid var(--border);
+  transition: width 260ms var(--ease-out);
+  position: relative;
+}
+
+.sidebar.collapsed {
+  width: var(--sidebar-w-collapsed);
+}
+
+/* ══════════════════════════════════════════
+   Logo
+══════════════════════════════════════════ */
+.sidebar-logo {
+  padding: 18px 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+  min-height: 72px;
+  flex-shrink: 0;
+}
+
+.logo-img-wrap {
+  width: 36px;
+  height: 36px;
+  background: rgba(255,103,25,.12);
+  border-radius: var(--r-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid rgba(255,103,25,.25);
+  transition: background var(--dur) var(--ease);
+}
+
+.logo-img-wrap img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  filter: none;
+  opacity: .92;
+}
+
+.logo-texts {
+  flex: 1;
+  min-width: 0;
+  opacity: 1;
+  transition: opacity 180ms var(--ease);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.collapsed .logo-texts {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.logo-name  { color: var(--text-primary); font-size: 15px; font-weight: 700; letter-spacing: 2.5px; line-height: 1; }
+.logo-sub   { color: var(--text-tertiary); font-size: 10px; margin-top: 3px; letter-spacing: .6px; }
+.tsa-badge  {
+  display: inline-block;
+  background: rgba(255,103,25,.12);
+  color: var(--brand-text);
+  font-size: 9px; font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 99px;
+  margin-top: 4px;
+  letter-spacing: .5px;
+  border: 1px solid rgba(255,103,25,.28);
+}
+
+/* ══════════════════════════════════════════
+   Botón Toggle
+══════════════════════════════════════════ */
+.btn-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 34px;
+  background: rgba(15,15,20,.02);
+  border: none;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-tertiary);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--dur-fast), color var(--dur-fast);
+  outline: none;
+}
+
+.btn-toggle:hover {
+  background: rgba(255,103,25,.08);
+  color: var(--brand);
+}
+
+.btn-toggle:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: -2px;
+}
+
+/* ══════════════════════════════════════════
+   Nav
+══════════════════════════════════════════ */
+.sidebar-nav {
+  flex: 1;
+  padding: 8px 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Scrollbar discreta */
+.sidebar-nav::-webkit-scrollbar { width: 3px; }
+.sidebar-nav::-webkit-scrollbar-track { background: transparent; }
+.sidebar-nav::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
+
+/* ── Sección label ── */
+.nav-section-label {
+  color: #000;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  padding: 16px 14px 5px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.label-text {
+  flex: 1;
+  overflow: hidden;
+  opacity: 1;
+  transition: opacity 160ms var(--ease);
+  white-space: nowrap;
+}
+
+.collapsed .label-text {
+  opacity: 0;
+  width: 0;
+}
+
+.label-dot {
+  display: block;
+  width: 0;
+  height: 1px;
+  background: var(--border2);
+  transition: width 260ms var(--ease-out), opacity 260ms var(--ease-out);
+  opacity: 0;
+  flex-shrink: 0;
+}
+
+.collapsed .label-dot {
+  width: 28px;
+  opacity: 1;
+  margin: 0 auto;
+}
+
+/* ── Nav item ── */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  cursor: pointer;
+  color: #000;
+  font-size: 13px;
+  font-weight: 650;
+  border-radius: 0;
+  margin-bottom: 1px;
+  transition:
+    color var(--dur-fast) var(--ease),
+    background var(--dur-fast) var(--ease),
+    padding var(--dur-fast) var(--ease);
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.collapsed .nav-item {
+  padding: 8px 0;
+  justify-content: center;
+  gap: 0;
+}
+
+.nav-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  transition: opacity var(--dur-fast) var(--ease);
+  opacity: .80;
+}
+
+.nav-item:hover .nav-icon  { opacity: .85; }
+.nav-item.active .nav-icon { opacity: 1; color: var(--brand); }
+
+.nav-item:hover  { background: rgba(15,15,20,.05); color: #000; }
+.nav-item.active {
+  background: rgba(255,103,25,.10);
+  color: var(--brand-text);
+  font-weight: 560;
+}
+
+/* Indicador activo */
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 20%; bottom: 20%;
+  width: 3px;
+  background: var(--brand);
+  border-radius: 0 3px 3px 0;
+  box-shadow: 0 0 8px rgba(255,103,25,.35);
+}
+
+/* ── Label de nav ── */
+.nav-label {
+  flex: 1;
+  overflow: hidden;
+  opacity: 1;
+  max-width: 160px;
+  transition: opacity 180ms var(--ease), max-width 260ms var(--ease-out);
+}
+
+.collapsed .nav-label {
+  opacity: 0;
+  max-width: 0;
+  pointer-events: none;
+}
+
+/* ══════════════════════════════════════════
+   User card
+══════════════════════════════════════════ */
+.sidebar-user {
+  padding: 10px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.user-card {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 10px;
+  background: var(--bg-subtle);
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border);
+  transition: background var(--dur-fast), padding var(--dur-fast) var(--ease);
+  overflow: hidden;
+  cursor: default;
+}
+
+.user-card:hover { background: var(--bg2); }
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-sm);
+  background: rgba(255,103,25,.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--brand-text);
+  flex-shrink: 0;
+}
+
+.user-info {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  opacity: 1;
+  transition: opacity 180ms var(--ease), max-width 260ms var(--ease-out);
+  max-width: 120px;
+}
+
+.collapsed .user-info {
+  opacity: 0;
+  max-width: 0;
+  pointer-events: none;
+}
+
+.user-name {
+  color: var(--text-primary);
+  font-size: 12.5px;
+  font-weight: 570;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-role {
+  color: var(--text-tertiary);
+  font-size: 10.5px;
+  margin-top: 1px;
+}
+
+.btn-logout {
+  background: transparent;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: 5px;
+  border-radius: var(--r-xs);
+  line-height: 0;
+  transition: color var(--dur-fast), background var(--dur-fast), opacity 180ms var(--ease);
+  flex-shrink: 0;
+}
+
+.collapsed .user-card {
+  flex-direction: column;
+  padding: 8px 0;
+  gap: 6px;
+}
+
+.collapsed .btn-logout {
+  opacity: 1;
+  pointer-events: auto;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-xs);
+  color: var(--text-tertiary);
+  border: 1px solid var(--border);
+  background: var(--bg-subtle);
+  flex-shrink: 0;
+}
+
+.collapsed .btn-logout:hover {
+  color: var(--red);
+  background: rgba(220,38,38,.08);
+  border-color: rgba(220,38,38,.2);
+}
+
+.btn-logout:hover { color: var(--red); background: rgba(220,38,38,.08); }
+
+/* ══════════════════════════════════════════
+   Responsive
+══════════════════════════════════════════ */
+@media (max-width: 640px) {
+  .sidebar { display: none; }
+}

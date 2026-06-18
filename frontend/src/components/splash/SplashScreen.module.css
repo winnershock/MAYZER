@@ -1,0 +1,190 @@
+/*
+ * SplashScreen v1.0
+ * Diseño: bienvenida moderna y minimalista.
+ * Animación: fade+scale entrada, glow ligero, blur+fade salida.
+ * Total: ~1.6s. Sin loading bars ni spinners.
+ */
+
+/* ── Contenedor ───────────────────────────────────────────── */
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #0a0a12;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  animation: splash-in 0.4s cubic-bezier(.16,1,.3,1) both;
+}
+
+@keyframes splash-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Glow ambiental de fondo — sutil, no agresivo */
+.splash::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 60% 50% at 50% 54%,
+    rgba(255, 103, 25, 0.13) 0%,
+    transparent 72%
+  );
+  animation: glow-pulse 1.4s ease-in-out both;
+}
+
+@keyframes glow-pulse {
+  0%   { opacity: 0; transform: scale(0.9); }
+  40%  { opacity: 1; transform: scale(1); }
+  100% { opacity: 0.7; }
+}
+
+/* ── Centro ───────────────────────────────────────────────── */
+.splash-center {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  animation: center-rise 0.55s cubic-bezier(.16,1,.3,1) 0.05s both;
+}
+
+@keyframes center-rise {
+  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ── Logo ─────────────────────────────────────────────────── */
+.splash-logo {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Glow naranja difuso detrás del logo */
+.splash-glow {
+  position: absolute;
+  inset: -14px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,103,25,.28) 0%, transparent 70%);
+  animation: logo-glow 1.2s ease-in-out 0.3s both;
+}
+
+@keyframes logo-glow {
+  0%   { opacity: 0; transform: scale(0.6); }
+  50%  { opacity: 1; transform: scale(1.1); }
+  100% { opacity: 0.7; transform: scale(1); }
+}
+
+.splash-logo-box {
+  width: 80px;
+  height: 80px;
+  border-radius: 22px;
+  background: rgba(255, 103, 25, 0.10);
+  border: 1.5px solid rgba(255, 103, 25, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: box-in 0.5s cubic-bezier(.16,1,.3,1) 0.08s both;
+}
+
+@keyframes box-in {
+  from { opacity: 0; transform: scale(0.65) rotate(-8deg); border-radius: 50%; }
+  to   { opacity: 1; transform: none; border-radius: 22px; }
+}
+
+.splash-logo-box img {
+  width: 46px;
+  height: 46px;
+  filter: brightness(0) invert(1);
+  opacity: 0.90;
+  position: relative;
+  z-index: 1;
+  animation: img-in 0.4s cubic-bezier(.16,1,.3,1) 0.15s both;
+}
+
+@keyframes img-in {
+  from { opacity: 0; transform: scale(0.5) rotate(-12deg); }
+  to   { opacity: 0.90; transform: none; }
+}
+
+/* ── Wordmark ─────────────────────────────────────────────── */
+.splash-wordmark {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.splash-title {
+  font-size: 46px;
+  font-weight: 800;
+  letter-spacing: 8px;
+  color: #ffffff;
+  line-height: 1;
+  animation: title-in 0.55s cubic-bezier(.16,1,.3,1) 0.18s both;
+}
+
+.splash-title span {
+  color: #FF6719;
+}
+
+@keyframes title-in {
+  from { opacity: 0; letter-spacing: 20px; filter: blur(6px); }
+  to   { opacity: 1; letter-spacing: 8px;  filter: blur(0); }
+}
+
+.splash-sub {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.30);
+  letter-spacing: 2.8px;
+  text-transform: uppercase;
+  animation: fade-up 0.4s ease 0.35s both;
+}
+
+/* Línea divisora minimalista */
+.splash-divider {
+  width: 32px;
+  height: 1px;
+  background: rgba(255, 103, 25, 0.40);
+  border-radius: 99px;
+  animation: divider-in 0.4s ease 0.45s both;
+}
+
+@keyframes divider-in {
+  from { opacity: 0; width: 0px; }
+  to   { opacity: 1; width: 32px; }
+}
+
+.splash-tagline {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: rgba(255, 255, 255, 0.16);
+  text-transform: uppercase;
+  animation: fade-up 0.35s ease 0.52s both;
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ── Salida: blur + fade (controlada por JS) ──────────────── */
+.splash-exit {
+  animation: splash-out 0.45s cubic-bezier(.4,0,1,1) both !important;
+}
+
+@keyframes splash-out {
+  0%   { opacity: 1; filter: blur(0px);   transform: scale(1); }
+  60%  { opacity: 0.4; filter: blur(3px); transform: scale(1.02); }
+  100% { opacity: 0;   filter: blur(8px); transform: scale(1.04); }
+}

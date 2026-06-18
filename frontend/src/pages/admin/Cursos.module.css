@@ -1,0 +1,48 @@
+/* ── Cursos.module.css ──────────────────────────────────────────────────────── */
+
+/* Fila de acciones del header */
+.headerAcciones {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Texto de requisitos bajo el nombre del curso */
+.textoRequisitos {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+
+/* Indicador de curso bloqueado (histórico) */
+.textoBloqueado {
+  font-size: 11px;
+  color: var(--warning, #b45309);
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Celda de duración */
+.celdaDuracion {
+  font-weight: 700;
+  color: var(--brand);
+}
+
+/* Celda de descripción */
+.celdaDescripcion {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  max-width: 260px;
+}
+
+/* Botón de acción con color danger */
+.btnDanger {
+  color: var(--danger);
+}
+
+/* Botón de acción con color success */
+.btnSuccess {
+  color: var(--success, #16a34a);
+}

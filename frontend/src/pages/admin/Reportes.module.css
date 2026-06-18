@@ -1,0 +1,189 @@
+/* ─────────────────────────────────────────────────────────
+   Reportes.module.css — Estilos específicos de la página de Reportes
+   Depende de: tokens.css (variables CSS globales)
+───────────────────────────────────────────────────────── */
+
+/* ── BarChart inline ── */
+.barChartEmpty {
+  color: var(--text-tertiary);
+  font-size: 13px;
+  padding: 8px 0;
+}
+.barChartWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.barChartRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.barChartLabel {
+  width: 160px;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
+}
+.barChartTrack {
+  flex: 1;
+  background: var(--bg);
+  border-radius: 6px;
+  height: 20px;
+  overflow: hidden;
+}
+.barChartFill {
+  height: 100%;
+  border-radius: 6px;
+  min-width: 6px;
+  transition: width 0.5s ease;
+}
+.barChartVal {
+  width: 32px;
+  text-align: right;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+/* ── Botones de descarga ── */
+.descargaWrap {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+  flex-wrap: nowrap;
+}
+.btnDescargaExcel {
+  color: #16a34a;
+  border-color: rgba(22, 163, 74, 0.3);
+  white-space: nowrap;
+}
+.btnDescargaPdf {
+  color: #dc2626;
+  border-color: rgba(220, 38, 38, 0.3);
+  white-space: nowrap;
+}
+.btnCargando {
+  font-size: 11px;
+}
+
+/* ── Subtítulo de periodo ── */
+.subtituloPeriodo {
+  color: var(--text-tertiary);
+  font-size: 13px;
+  margin-top: 4px;
+}
+.subtituloPeriodo strong {
+  color: var(--text-secondary);
+  font-weight: 650;
+}
+
+/* ── Filters bar ── */
+.filtersBar {
+  margin-bottom: 24px;
+}
+
+/* ── Label de mes opcional ── */
+.labelOpcional {
+  color: var(--text-tertiary);
+  font-weight: 400;
+}
+
+/* ── KPI icon layout ── */
+.kpiIconWrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.kpiIconCircle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ── Tarjeta con margen superior ── */
+.cardMarginTop {
+  margin-top: 20px;
+}
+
+/* ── Cabeceras de tabla ── */
+.thRight {
+  text-align: right;
+}
+.tdRight {
+  text-align: right;
+  font-weight: 700;
+}
+.tdRightMuted {
+  text-align: right;
+  color: var(--text-tertiary);
+}
+
+/* ── Fila de total ── */
+.filaTotal {
+  font-weight: 700;
+  background: var(--brand-muted);
+}
+.filaTotalTd {
+  text-align: right;
+}
+
+/* ── Periodo inline ── */
+.periodoInline {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+/* ── Grid de tablas descargables ── */
+.descargaGrid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+}
+.descargaItem {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--bg);
+  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.descargaItem:hover {
+  border-color: var(--border2);
+  box-shadow: var(--shadow-xs);
+}
+.descargaItemInfo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.descargaIconCircle {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: var(--brand-muted);
+}
+.descargaItemNombre {
+  font-weight: 650;
+  font-size: 13.5px;
+}
+.descargaItemDesc {
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}

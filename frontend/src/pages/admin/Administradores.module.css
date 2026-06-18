@@ -1,0 +1,79 @@
+/* ── Administradores.module.css ─────────────────────────────────────────────── */
+
+/* Tarjeta de tabla sin padding interno */
+.cardTable {
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Estado vacío y cargando */
+.estadoVacio,
+.cargando {
+  padding: 40px;
+  text-align: center;
+  color: var(--text-tertiary);
+}
+
+/* Fila de nombre: avatar + texto */
+.adminNombre {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Avatar circular con inicial */
+.adminAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.adminAvatarActivo {
+  background: var(--brand);
+}
+
+.adminAvatarInactivo {
+  background: var(--text-tertiary);
+}
+
+/* Nombre del administrador */
+.adminNombreTexto {
+  font-weight: 600;
+}
+
+/* Código de usuario */
+.codigoUsuario {
+  font-size: 12px;
+}
+
+/* Email */
+.emailTexto {
+  font-size: 13px;
+}
+
+/* Fecha último login */
+.fechaLogin {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+/* Nota informativa inferior */
+.notaInfo {
+  margin-top: 16px;
+  padding: 16px;
+  background: var(--brand-light);
+  border: 1px solid var(--brand-muted);
+}
+
+.notaInfoTexto {
+  margin: 0;
+  font-size: 13px;
+  color: var(--brand-text);
+}

@@ -1,0 +1,28 @@
+/* ─────────────────────────────────────────────────────────
+   global.css — Entry point del Design System
+   Mayzer v1.0.0
+
+   Orden de carga:
+     1. tokens     → Variables CSS (:root)
+     2. reset      → Box-model, body, scrollbar, selection
+     3. layout     → App shell, page-header, stat-grid, responsive
+     4-12. UI      → Componentes atómicos por responsabilidad
+     13. utilities → Clases de utilidad general
+───────────────────────────────────────────────────────── */
+
+/* ── Base ── */
+@import './tokens.css';
+@import './reset.css';
+@import './layout.css';
+
+/* ── Componentes UI (un archivo por responsabilidad) ── */
+@import './cards.css';
+@import './badges.css';
+@import './buttons.css';
+@import './tables.css';
+@import './forms.css';
+@import './modals.css';
+@import './alerts.css';
+@import './feedback.css';
+@import './utilities.css';
+@import './formpublico.css';

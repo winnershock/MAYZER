@@ -1,0 +1,21 @@
+/**
+ * routes/curso.routes.js
+ * Responsabilidad : Endpoints del catálogo de cursos.
+ * Exporta         : router Express
+ * Usado en        : routes/index.js  →  /api/cursos
+ * Depende de      : controllers/curso.controller.js, middleware/auth.middleware.js
+ */
+const express = require('express');
+const { autenticar, soloAdmin } = require('../middleware/auth.middleware');
+const ctrl = require('../controllers/curso.controller');
+
+const router = express.Router();
+router.use(autenticar);
+
+router.get('/',               ctrl.listar);
+router.post('/',              soloAdmin, ctrl.crear);
+router.put('/:id',            soloAdmin, ctrl.actualizar);
+router.delete('/:id',         soloAdmin, ctrl.desactivar);
+router.patch('/:id/activar',  soloAdmin, ctrl.activar);
+
+module.exports = router;

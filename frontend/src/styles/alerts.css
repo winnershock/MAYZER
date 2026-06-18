@@ -1,0 +1,11 @@
+/* ─────────────────────────────────────────────────────────
+   alerts.css — Alertas y notificaciones inline (.alert, variantes de color).
+   Depende de: tokens.css
+───────────────────────────────────────────────────────── */
+
+.alert { display: flex; align-items: flex-start; gap: 10px; padding: 11px 14px; border-radius: var(--r-sm); font-size: 12.5px; line-height: 1.5; border: 1px solid transparent; }
+.alert-sena    { background: var(--brand-light); color: var(--brand-text); border-color: rgba(255,103,25,.2); }
+.alert-danger  { background: var(--red-bg);      color: var(--red);        border-color: var(--red-border); }
+.alert-warn    { background: var(--amber-bg);    color: var(--amber);      border-color: var(--amber-border); }
+.alert-info    { background: var(--blue-bg);     color: var(--blue);       border-color: var(--blue-border); }
+.alert-success { background: var(--green-bg);    color: var(--green);      border-color: var(--green-border); }

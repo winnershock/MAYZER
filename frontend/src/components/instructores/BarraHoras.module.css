@@ -1,0 +1,6 @@
+.barra-horas { min-width: 120px; }
+.barra-horas-labels { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 3px; color: var(--text-tertiary); }
+.barra-horas-labels .asignadas { font-weight: 700; }
+.barra-horas-track { height: 7px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.barra-horas-fill  { height: 100%; border-radius: 4px; transition: width .3s; }
+.barra-horas-pct   { font-size: 10px; color: var(--text-tertiary); margin-top: 2px; text-align: right; }

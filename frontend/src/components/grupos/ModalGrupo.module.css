@@ -1,0 +1,18 @@
+
+.form-nota   { font-size: 12px; color: var(--text-tertiary); margin-top: 4px; }
+.dos-cols    { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.cupo-hint   { font-size: 12px; color: var(--text-tertiary); margin-top: 4px; display: block; }
+.seccion-sep { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+.nombre-row    { display: flex; align-items: center; gap: 8px; }
+.codigo-prefix { padding: 6px 10px; background: var(--bg2); border: 1px solid var(--border2);
+                 border-radius: 6px; font-size: 13px; font-weight: 700; white-space: nowrap;
+                 color: var(--text-secondary); flex-shrink: 0; }
+.nombre-input  { flex: 1; }
+.form-hint     { color: var(--text-tertiary); font-size: 11px; margin-top: 4px; display: block; }
+.modal-title-mb{ margin-bottom: 6px; }
+.textarea-obs  { min-height: 70px; resize: vertical; }
+
+@media (max-width: 540px) {
+  .dos-cols { grid-template-columns: 1fr; }
+}

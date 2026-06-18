@@ -1,0 +1,13 @@
+/* ModalSolicitud.module.css – Inline styles migrados */
+.datos-grid      { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+.dato-cell       { padding: 8px 12px; background: var(--bg); border-radius: var(--r-sm); font-size: 13px; }
+.dato-label      { font-weight: 700; color: var(--text-tertiary); margin-right: 8px; }
+.aspirantes-wrap { margin-bottom: 16px; }
+.aspirantes-title{ font-weight: 700; margin-bottom: 8px; font-size: 13px; }
+.asp-tabla       { width: 100%; font-size: 12px; }
+.td-mono         { font-family: monospace; }
+.modal-actions-wrap { flex-wrap: wrap; gap: 8px; }
+
+@media (max-width: 600px) {
+  .datos-grid { grid-template-columns: 1fr; }
+}
