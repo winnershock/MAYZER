@@ -4,8 +4,6 @@ node_modules/
 
 # ── Variables de entorno — NUNCA compartir ────────────────
 .env
-.env.*
-!.env.example
 
 # ── Builds ────────────────────────────────────────────────
 dist/
