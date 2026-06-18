@@ -1,15 +1,27 @@
 /**
  * pages/auth/Login.jsx
- * Responsabilidad : Página de inicio de sesión con control de intentos fallidos.
+ * Responsabilidad : Página de inicio de sesión con bloqueo progresivo de seguridad.
  * Exporta         : Login (default)
  * Depende de      : hooks/useAuth.jsx, hooks/useToast.jsx
  */
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth }  from '../../hooks/useAuth.jsx';
 import { useToast } from '../../hooks/useToast.jsx';
 import Icon         from '../../components/common/Icon.jsx';
 import styles       from './Login.module.css';
+
+// ── Utilidades de formato ──────────────────────────────────────────────────
+function formatearTiempo(ms) {
+  const totalSeg = Math.ceil(ms / 1000);
+  if (totalSeg <= 0) return '0 seg';
+  if (totalSeg < 60) return `${totalSeg} seg`;
+  const min = Math.floor(totalSeg / 60);
+  const seg  = totalSeg % 60;
+  if (min < 60) return seg > 0 ? `${min} min ${seg} seg` : `${min} min`;
+  const h = Math.ceil(totalSeg / 3600);
+  return `${h} h`;
+}
 
 export default function LoginPage() {
   const [form,     setForm]     = useState({ nombre_usuario: '', contrasena: '' });
@@ -17,18 +29,51 @@ export default function LoginPage() {
   const [showPass, setShowPass] = useState(false);
   const [error,    setError]    = useState('');
 
+  // ── Estado de bloqueo ────────────────────────────────────────────────────
+  const [bloqueadoHasta,    setBloqueadoHasta]    = useState(null); // Date | null
+  const [tiempoRestante,    setTiempoRestante]    = useState(0);    // ms
+  const [intentosRestantes, setIntentosRestantes] = useState(3);
+  const intervaloRef = useRef(null);
+
   const { login }  = useAuth();
   const toast      = useToast();
   const navigate   = useNavigate();
 
-  const cambiar = e => {
+  // ── Countdown activo mientras hay bloqueo ─────────────────────────────
+  useEffect(() => {
+    if (!bloqueadoHasta) { setTiempoRestante(0); return; }
+
+    function tick() {
+      const restante = new Date(bloqueadoHasta) - Date.now();
+      if (restante <= 0) {
+        // Bloqueo expirado → desbloquear automáticamente
+        setBloqueadoHasta(null);
+        setTiempoRestante(0);
+        setIntentosRestantes(3);
+        setError('');
+        clearInterval(intervaloRef.current);
+      } else {
+        setTiempoRestante(restante);
+      }
+    }
+
+    tick(); // actualizar inmediatamente
+    intervaloRef.current = setInterval(tick, 500);
+    return () => clearInterval(intervaloRef.current);
+  }, [bloqueadoHasta]);
+
+  const bloqueado = bloqueadoHasta && new Date(bloqueadoHasta) > new Date();
+
+  // ── Handlers ────────────────────────────────────────────────────────────
+  const cambiar = useCallback(e => {
+    if (bloqueado) return; // ignorar input durante bloqueo
     setError('');
     setForm(p => ({ ...p, [e.target.name]: e.target.value }));
-  };
+  }, [bloqueado]);
 
   async function enviar(e) {
     e?.preventDefault();
-    if (cargando) return;
+    if (cargando || bloqueado) return; // no contar intentos durante bloqueo
     if (!form.nombre_usuario.trim() || !form.contrasena) {
       setError('Por favor completa todos los campos');
       return;
@@ -39,10 +84,20 @@ export default function LoginPage() {
 
     try {
       await login(form.nombre_usuario.trim(), form.contrasena);
-      // El Splash se mostrará automáticamente vía useAuth.recienLogueado
       navigate('/inicio', { replace: true });
     } catch (err) {
-      const mensaje = err.response?.data?.error || 'Usuario o contraseña incorrectos';
+      const data    = err.response?.data;
+      const mensaje = data?.error || 'Usuario o contraseña incorrectos';
+
+      // El backend devuelve bloqueadoHasta cuando activa un bloqueo
+      if (data?.bloqueadoHasta) {
+        setBloqueadoHasta(new Date(data.bloqueadoHasta));
+        setIntentosRestantes(0);
+        setForm(p => ({ ...p, contrasena: '' })); // limpiar campo
+      } else if (typeof data?.intentosRestantes === 'number') {
+        setIntentosRestantes(data.intentosRestantes);
+      }
+
       setError(mensaje);
       toast(mensaje, 'danger');
     } finally {
@@ -50,8 +105,9 @@ export default function LoginPage() {
     }
   }
 
-  const handleKeyDown = e => { if (e.key === 'Enter') enviar(e); };
+  const handleKeyDown = e => { if (e.key === 'Enter' && !bloqueado) enviar(e); };
 
+  // ── Render ───────────────────────────────────────────────────────────────
   return (
     <div className={styles['login-page']}>
       <div className={styles['login-card-wrap']}>
@@ -94,7 +150,7 @@ export default function LoginPage() {
                 />
               </div>
 
-              {/* Contraseña */}
+              {/* Contraseña — deshabilitada durante bloqueo */}
               <div className={styles['login-input-wrap']}>
                 <span className={styles['login-input-icon']}>
                   <Icon name="lock" size={15} />
@@ -104,9 +160,9 @@ export default function LoginPage() {
                   name="contrasena"
                   value={form.contrasena}
                   onChange={cambiar}
-                  placeholder="Contraseña"
+                  placeholder={bloqueado ? 'Campo bloqueado temporalmente' : 'Contraseña'}
                   autoComplete="current-password"
-                  disabled={cargando}
+                  disabled={cargando || bloqueado}
                   className={styles['login-input-padded-right']}
                 />
                 <button
@@ -115,13 +171,35 @@ export default function LoginPage() {
                   onClick={() => setShowPass(p => !p)}
                   tabIndex={-1}
                   aria-label={showPass ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  disabled={bloqueado}
                 >
                   <Icon name={showPass ? 'eye-off' : 'eye'} size={15} />
                 </button>
               </div>
 
+              {/* Bloqueo activo: countdown */}
+              {bloqueado && (
+                <div className={styles['login-bloqueo']}>
+                  <Icon name="clock" size={14} />
+                  <span>
+                    Bloqueado — intenta en{' '}
+                    <strong>{formatearTiempo(tiempoRestante)}</strong>
+                  </span>
+                </div>
+              )}
+
+              {/* Intentos restantes (solo cuando no está bloqueado y ha fallado) */}
+              {!bloqueado && intentosRestantes < 3 && intentosRestantes > 0 && (
+                <div className={styles['login-intentos']}>
+                  <Icon name="alert-triangle" size={13} />
+                  <span>
+                    {intentosRestantes} intento{intentosRestantes !== 1 ? 's' : ''} restante{intentosRestantes !== 1 ? 's' : ''} antes del bloqueo
+                  </span>
+                </div>
+              )}
+
               {/* Error inline */}
-              {error && (
+              {error && !bloqueado && (
                 <div className={styles['login-error']}>
                   {error}
                 </div>
@@ -131,11 +209,16 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={enviar}
-                disabled={cargando}
+                disabled={cargando || bloqueado}
                 className={styles['login-submit']}
-                style={{ opacity: cargando ? 0.75 : 1 }}
+                style={{ opacity: (cargando || bloqueado) ? 0.65 : 1 }}
               >
-                {cargando ? 'Verificando...' : (
+                {bloqueado ? (
+                  <>
+                    <Icon name="lock" size={15} className={styles['btn-icon']} />
+                    Bloqueado ({formatearTiempo(tiempoRestante)})
+                  </>
+                ) : cargando ? 'Verificando...' : (
                   <>
                     <Icon name="log-in" size={15} className={styles['btn-icon']} />
                     Entrar al sistema

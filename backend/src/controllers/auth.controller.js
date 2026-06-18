@@ -13,24 +13,46 @@ const { registrarAuditoria } = require('../middleware/audit.middleware');
 const { handleError }        = require('../utils/response.utils');
 
 /**
- * Calcula el tiempo de bloqueo según intentos fallidos:
- *   1-2 intentos → sin bloqueo
- *   3 intentos   → 30 segundos
- *   4 intentos   → 1 minuto
- *   5+  intentos → 10 minutos
+ * Sistema de bloqueo progresivo por nivel de penalización:
+ *   Nivel 0 → sin bloqueo (hasta 2 intentos fallidos)
+ *   Nivel 1 → 30 segundos  (al llegar a 3 intentos)
+ *   Nivel 2 → 1 minuto     (siguiente ciclo)
+ *   Nivel 3 → 5 minutos
+ *   Nivel 4 → 10 minutos
+ *   Nivel 5+ → 24 horas (reinicia todo al expirar)
+ *
+ * Cada ciclo: 3 intentos fallidos activan bloqueo del nivel actual,
+ * el nivel sube, y al expirar el bloqueo el contador vuelve a 0.
  */
-function calcularBloqueo(intentos) {
-  if (intentos <= 2) return null;
-  if (intentos === 3) return new Date(Date.now() + 30 * 1000);
-  if (intentos === 4) return new Date(Date.now() + 1 * 60 * 1000);
-  return new Date(Date.now() + 10 * 60 * 1000);
+const TIEMPOS_BLOQUEO_MS = [
+  30 * 1000,          // nivel 1: 30 segundos
+  1  * 60 * 1000,     // nivel 2: 1 minuto
+  5  * 60 * 1000,     // nivel 3: 5 minutos
+  10 * 60 * 1000,     // nivel 4: 10 minutos
+  24 * 60 * 60 * 1000,// nivel 5+: 24 horas
+];
+const INTENTOS_POR_CICLO = 3;
+const NIVEL_MAXIMO       = TIEMPOS_BLOQUEO_MS.length; // 5
+
+function calcularBloqueo(nivel) {
+  if (nivel < 1) return null;
+  const idx = Math.min(nivel - 1, TIEMPOS_BLOQUEO_MS.length - 1);
+  return new Date(Date.now() + TIEMPOS_BLOQUEO_MS[idx]);
 }
 
 function mensajeBloqueo(bloqueadoHasta) {
-  const segundos = Math.ceil((bloqueadoHasta - Date.now()) / 1000);
-  if (segundos < 60) return `Cuenta bloqueada. Intenta en ${segundos} segundos.`;
-  const minutos = Math.ceil(segundos / 60);
-  return `Cuenta bloqueada. Intenta en ${minutos} minuto${minutos !== 1 ? 's' : ''}.`;
+  const ms = new Date(bloqueadoHasta) - Date.now();
+  const totalSegundos = Math.ceil(ms / 1000);
+  if (totalSegundos < 60) return `Demasiados intentos. Intenta en ${totalSegundos} segundo${totalSegundos !== 1 ? 's' : ''}.`;
+  const minutos = Math.floor(totalSegundos / 60);
+  const segundos = totalSegundos % 60;
+  if (minutos < 60) {
+    return segundos > 0
+      ? `Demasiados intentos. Intenta en ${minutos} min ${segundos} seg.`
+      : `Demasiados intentos. Intenta en ${minutos} minuto${minutos !== 1 ? 's' : ''}.`;
+  }
+  const horas = Math.ceil(totalSegundos / 3600);
+  return `Cuenta bloqueada por ${horas} hora${horas !== 1 ? 's' : ''}. Intenta más tarde.`;
 }
 
 // ── POST /api/auth/login ──────────────────────────────────
@@ -54,32 +76,53 @@ async function login(req, res) {
 
     const usuario = filas[0];
 
-    // Bloqueo activo → rechazar sin revelar si la contraseña es correcta
-    if (usuario.bloqueado_hasta && new Date(usuario.bloqueado_hasta) > new Date()) {
-      return res.status(403).json({ error: mensajeBloqueo(new Date(usuario.bloqueado_hasta)) });
+    const ahora = new Date();
+
+    // Bloqueo activo → rechazar, devolver tiempo restante para el frontend
+    if (usuario.bloqueado_hasta && new Date(usuario.bloqueado_hasta) > ahora) {
+      return res.status(403).json({
+        error:          mensajeBloqueo(usuario.bloqueado_hasta),
+        bloqueadoHasta: usuario.bloqueado_hasta,
+      });
     }
 
-    // Bloqueo expirado → resetear contador para que el ciclo empiece limpio
-    if (usuario.bloqueado_hasta && new Date(usuario.bloqueado_hasta) <= new Date()) {
+    // Bloqueo expirado → resetear contador e intentos del ciclo
+    // Si era nivel máximo (24h), también resetear el nivel de penalización
+    if (usuario.bloqueado_hasta && new Date(usuario.bloqueado_hasta) <= ahora) {
+      const nivelActual   = usuario.nivel_bloqueo || 0;
+      const esNivelMaximo = nivelActual >= NIVEL_MAXIMO;
       await pool.execute(
-        'UPDATE usuario SET intentos_fallidos = 0, bloqueado_hasta = NULL WHERE id = ?',
-        [usuario.id]
+        'UPDATE usuario SET intentos_fallidos = 0, bloqueado_hasta = NULL, nivel_bloqueo = ? WHERE id = ?',
+        [esNivelMaximo ? 0 : nivelActual, usuario.id]
       );
       usuario.intentos_fallidos = 0;
+      usuario.nivel_bloqueo     = esNivelMaximo ? 0 : nivelActual;
     }
 
     const contrasenaValida = await bcrypt.compare(contrasena, usuario.contrasena_hash);
     if (!contrasenaValida) {
-      const intentos       = usuario.intentos_fallidos + 1;
-      const bloqueadoHasta = calcularBloqueo(intentos);
+      const intentosCiclo = usuario.intentos_fallidos + 1;
+      let bloqueadoHasta  = null;
+      let nuevoNivel      = usuario.nivel_bloqueo || 0;
+
+      if (intentosCiclo >= INTENTOS_POR_CICLO) {
+        // Alcanzó el límite del ciclo → bloquear y subir nivel
+        nuevoNivel    = Math.min(nuevoNivel + 1, NIVEL_MAXIMO);
+        bloqueadoHasta = calcularBloqueo(nuevoNivel);
+      }
+
       await pool.execute(
-        'UPDATE usuario SET intentos_fallidos = ?, bloqueado_hasta = ? WHERE id = ?',
-        [intentos, bloqueadoHasta, usuario.id]
+        'UPDATE usuario SET intentos_fallidos = ?, bloqueado_hasta = ?, nivel_bloqueo = ? WHERE id = ?',
+        [intentosCiclo, bloqueadoHasta, nuevoNivel, usuario.id]
       );
+
+      const intentosRestantes = INTENTOS_POR_CICLO - intentosCiclo;
       return res.status(401).json({
         error: bloqueadoHasta
           ? mensajeBloqueo(bloqueadoHasta)
-          : `Contraseña incorrecta. Verifica tus datos.`,
+          : `Contraseña incorrecta. ${intentosRestantes} intento${intentosRestantes !== 1 ? 's' : ''} antes del bloqueo.`,
+        bloqueadoHasta: bloqueadoHasta || null,
+        intentosRestantes: bloqueadoHasta ? 0 : intentosRestantes,
       });
     }
 

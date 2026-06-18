@@ -14,6 +14,15 @@ function resolverCola(token, error) {
   colaEspera = [];
 }
 
+function redirigirLogin() {
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('usuario');
+  // Evitar loop si ya estamos en /login
+  if (!window.location.pathname.includes('/login')) {
+    window.location.replace('/login');
+  }
+}
+
 const RUTAS_AUTH = new Set(['/auth/login', '/auth/logout', '/auth/refresh']);
 
 function esRutaAuth(url = '') {
@@ -48,12 +57,14 @@ export function applyAuthInterceptors(apiInstance) {
 
       const url    = original.url ?? '';
       const status = error.response?.status;
-      const code   = error.response?.data?.code;
 
+      // No interceptar rutas de auth para evitar loops
       if (esRutaAuth(url)) return Promise.reject(error);
 
-      // ── TOKEN_EXPIRED → refresh con cola ────────────────────────────────
-      if (status === 401 && code === 'TOKEN_EXPIRED' && !original._retry) {
+      // ── Cualquier 401 → intentar refresh silencioso ──────────────────
+      if (status === 401 && !original._retry) {
+
+        // Si ya hay un refresh en curso, encolar y esperar
         if (refreshando) {
           return new Promise((resolve, reject) => {
             colaEspera.push({ resolve, reject });
@@ -61,6 +72,9 @@ export function applyAuthInterceptors(apiInstance) {
             original.headers ??= {};
             original.headers.Authorization = `Bearer ${token}`;
             return apiInstance(original);
+          }).catch(() => {
+            redirigirLogin();
+            return Promise.reject(error);
           });
         }
 
@@ -76,25 +90,19 @@ export function applyAuthInterceptors(apiInstance) {
           ]);
 
           localStorage.setItem('accessToken', data.accessToken);
-          // refreshToken se renueva automáticamente vía cookie httpOnly
           resolverCola(data.accessToken, null);
           original.headers ??= {};
           original.headers.Authorization = `Bearer ${data.accessToken}`;
           return apiInstance(original);
-        } catch (refreshError) {
-          resolverCola(null, refreshError);
-          localStorage.clear();
-          window.location.href = '/login';
-          return Promise.reject(refreshError);
+
+        } catch {
+          // Refresh falló → cookie expirada o revocada → logout forzado
+          resolverCola(null, new Error('Sesión expirada'));
+          redirigirLogin();
+          return Promise.reject(error);
         } finally {
           refreshando = false;
         }
-      }
-
-      // ── 401 genérico sin token → redirigir ──────────────────────────────
-      if (status === 401 && !original._retry && !localStorage.getItem('accessToken')) {
-        localStorage.clear();
-        window.location.href = '/login';
       }
 
       if (import.meta.env?.DEV && status === 401) {
