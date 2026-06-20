@@ -10,3 +10,5 @@
 .color-hint      { font-size: 12px; color: var(--text-tertiary); }
 .btn-reset-color { background: none; border: none; cursor: pointer; font-size: 11px;
                    color: var(--danger); padding: 0; }
+.input-readonly  { background: var(--bg2, #f3f4f6); color: var(--text-tertiary);
+                   cursor: not-allowed; }

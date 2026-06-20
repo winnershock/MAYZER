@@ -49,11 +49,18 @@ function construirFiltroPeriodo(anio, mes, columna = 'created_at') {
  * @returns {{ limit: number, offset: number, pagina: number }}
  */
 function normalizarPaginacion(query) {
-  const paginaRaw   = query.page      ?? query.pagina     ?? 1;
-  const porPaginaRaw= query.limit     ?? query.por_pagina ?? 25;
+  const paginaRaw    = query.page  ?? query.pagina     ?? 1;
+  const porPaginaRaw = query.limit ?? query.por_pagina ?? 25;
 
-  const pagina = Math.max(1, Number(paginaRaw));
-  const limit  = Math.max(1, Math.min(500, Number(porPaginaRaw)));
+  // Number(objeto) o Number('[object Object]') da NaN — sin este resguardo,
+  // un valor mal formado (ej. un evento del DOM filtrado por error desde el
+  // frontend) se propagaría como `LIMIT NaN OFFSET NaN` en SQL crudo y
+  // tumbaría la query. Cualquier valor no numérico o no finito cae al default.
+  const paginaNum    = Number(paginaRaw);
+  const porPaginaNum = Number(porPaginaRaw);
+
+  const pagina = Math.max(1, Number.isFinite(paginaNum) ? paginaNum : 1);
+  const limit  = Math.max(1, Math.min(500, Number.isFinite(porPaginaNum) ? porPaginaNum : 25));
   const offset = (pagina - 1) * limit;
   return { limit, offset, pagina };
 }

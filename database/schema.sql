@@ -69,6 +69,7 @@ CREATE TABLE usuario (
   intentos_fallidos INT     NOT NULL DEFAULT 0,
   nivel_bloqueo     INT     NOT NULL DEFAULT 0,
   bloqueado_hasta   DATETIME NULL,
+  ultimo_intento_fallido DATETIME NULL,
   ultimo_login      DATETIME NULL,
   created_at        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -375,4 +376,3 @@ CREATE TABLE auditoria_log (
   INDEX idx_auditoria_usuario  (usuario_id),
   INDEX idx_auditoria_created  (created_at)
 ) ENGINE=InnoDB COMMENT='Log de auditoría de cambios sobre entidades clave';
-

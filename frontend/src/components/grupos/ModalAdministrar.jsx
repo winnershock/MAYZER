@@ -168,8 +168,7 @@ export default function ModalAdministrar({ grupoId, onClose, onDone }) {
                       </div>
                     </div>
                     <button
-                      className="btn btn-xs"
-                      className={s['btn-desasignar']}
+                      className={`btn btn-xs ${s['btn-desasignar']}`}
                       disabled={operando === a.id}
                       onClick={() => quitar(a)}
                       title="Quitar del grupo"
@@ -202,8 +201,7 @@ export default function ModalAdministrar({ grupoId, onClose, onDone }) {
                       <div className={s['asp-empresa']}>{a.empresa}</div>
                     </div>
                     <button
-                      className="btn btn-sm"
-                      className={s['btn-asignar']}
+                      className={`btn btn-sm ${s['btn-asignar']}`}
                       style={{ opacity: cupoDisponible <= 0 ? 0.5 : 1 }}
                       disabled={operando === a.id || cupoDisponible <= 0}
                       onClick={() => asignar(a)}

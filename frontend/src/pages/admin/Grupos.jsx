@@ -124,7 +124,7 @@ export default function Grupos() {
           <button className="btn btn-outline btn-sm" onClick={limpiarFiltros}>
             Limpiar
           </button>
-          <button className="btn btn-outline btn-sm" onClick={recargar}>
+          <button className="btn btn-outline btn-sm" onClick={() => recargar()}>
             <Icon name="refresh" size={13} /> Actualizar
           </button>
         </div>

@@ -8,10 +8,11 @@
 // auth.routes.js
 const express = require('express');
 const router = express.Router();
-const { login, refreshToken, logout } = require('../controllers/auth.controller');
+const { login, refreshToken, logout, estadoBloqueo } = require('../controllers/auth.controller');
 const { autenticar } = require('../middleware/auth.middleware');
 
 router.post('/login', login);
+router.get('/estado-bloqueo', estadoBloqueo);
 router.post('/refresh', refreshToken);
 router.post('/logout', autenticar, logout);
 

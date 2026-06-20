@@ -9,7 +9,10 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth }  from '../../hooks/useAuth.jsx';
 import { useToast } from '../../hooks/useToast.jsx';
 import Icon         from '../../components/common/Icon.jsx';
-import styles       from './Login.module.css';
+import api    from '../../services/api.js';
+import styles from './Login.module.css';
+
+const STORAGE_KEY = 'login_bloqueo'; // { nombre_usuario, bloqueadoHasta } — sobrevive recargas
 
 // ── Utilidades de formato ──────────────────────────────────────────────────
 function formatearTiempo(ms) {
@@ -24,34 +27,130 @@ function formatearTiempo(ms) {
 }
 
 export default function LoginPage() {
-  const [form,     setForm]     = useState({ nombre_usuario: '', contrasena: '' });
+  // ── Estado de bloqueo ────────────────────────────────────────────────────
+  // Se inicializa leyendo sessionStorage para que, si la página se recarga
+  // mientras hay un bloqueo activo, el countdown se siga mostrando de
+  // inmediato (sin esperar la respuesta del backend ni a otro render).
+  const bloqueoGuardado = (() => {
+    try {
+      const raw = sessionStorage.getItem(STORAGE_KEY);
+      if (!raw) return null;
+      const data = JSON.parse(raw);
+      if (data?.bloqueadoHasta && new Date(data.bloqueadoHasta) > new Date()) return data;
+      return null;
+    } catch {
+      return null;
+    }
+  })();
+
+  const [form,     setForm]     = useState({
+    nombre_usuario: bloqueoGuardado?.nombre_usuario || '',
+    contrasena: '',
+  });
   const [cargando, setCargando] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const [error,    setError]    = useState('');
 
-  // ── Estado de bloqueo ────────────────────────────────────────────────────
-  const [bloqueadoHasta,    setBloqueadoHasta]    = useState(null); // Date | null
+  const [bloqueadoHasta,    setBloqueadoHastaState] = useState(bloqueoGuardado?.bloqueadoHasta ? new Date(bloqueoGuardado.bloqueadoHasta) : null);
   const [tiempoRestante,    setTiempoRestante]    = useState(0);    // ms
   const [intentosRestantes, setIntentosRestantes] = useState(3);
-  const intervaloRef = useRef(null);
+  const intervaloRef     = useRef(null);
+  const debounceRef      = useRef(null);
+  const hidratado        = useRef(false); // evita que el efecto de persistencia borre sessionStorage antes de confirmar con el backend
+  const bloqueadoHastaRef = useRef(bloqueadoHasta); // siempre con el valor más reciente, para que el intervalo no dependa de recrearse
+  const enviandoRef       = useRef(false); // guard SÍNCRONO contra doble submit (setCargando es asíncrono y no alcanza a bloquear un segundo enviar() disparado en el mismo tick — ej. Enter + click casi simultáneos)
+
+  // setBloqueadoHasta: además de actualizar el estado (para el render),
+  // ignora valores que representen el MISMO instante que el actual — así
+  // evitamos que respuestas repetidas del backend (confirmación al montar +
+  // debounce del input, ambas devolviendo el mismo bloqueo) disparen un
+  // nuevo objeto Date con igual valor y reinicien el intervalo del countdown
+  // de forma innecesaria.
+  const setBloqueadoHasta = useCallback((valor) => {
+    const actual = bloqueadoHastaRef.current;
+    const mismoInstante =
+      valor && actual && new Date(valor).getTime() === new Date(actual).getTime();
+    if (mismoInstante) return;
+    bloqueadoHastaRef.current = valor;
+    setBloqueadoHastaState(valor);
+  }, []);
 
   const { login }  = useAuth();
   const toast      = useToast();
   const navigate   = useNavigate();
 
-  // ── Countdown activo mientras hay bloqueo ─────────────────────────────
+  // Confirmar contra el backend al montar: si el bloqueo ya expiró o fue
+  // liberado en el servidor, se libera aquí también; si sigue vigente,
+  // se sincroniza el valor exacto (corrige posibles desfases de reloj).
   useEffect(() => {
-    if (!bloqueadoHasta) { setTiempoRestante(0); return; }
+    if (!bloqueoGuardado?.nombre_usuario) { hidratado.current = true; return; }
+    api.get('/auth/estado-bloqueo', { params: { nombre_usuario: bloqueoGuardado.nombre_usuario } })
+      .then(({ data }) => {
+        if (data?.bloqueadoHasta) {
+          setBloqueadoHasta(new Date(data.bloqueadoHasta));
+        } else {
+          setBloqueadoHasta(null);
+          sessionStorage.removeItem(STORAGE_KEY);
+        }
+      })
+      .catch(() => { /* si falla la consulta, se mantiene el valor local hasta el próximo intento */ })
+      .finally(() => { hidratado.current = true; });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Persistir el bloqueo vigente para sobrevivir recargas/cierres de pestaña.
+  // Se ignora hasta que termine la hidratación inicial para no borrar
+  // sessionStorage con el valor vacío transitorio del primer render.
+  useEffect(() => {
+    if (!hidratado.current) return;
+    if (bloqueadoHasta && form.nombre_usuario.trim()) {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
+        nombre_usuario: form.nombre_usuario.trim(),
+        bloqueadoHasta: bloqueadoHasta.toISOString(),
+      }));
+    } else {
+      sessionStorage.removeItem(STORAGE_KEY);
+    }
+  }, [bloqueadoHasta, form.nombre_usuario]);
+
+  // ── Consultar bloqueo al escribir el usuario (debounced) ────────────────
+  // Cubre el caso de otra pestaña/dispositivo: si el usuario tecleado ya
+  // tiene un bloqueo activo en el servidor, se muestra el countdown aunque
+  // esta pestaña nunca haya intentado loguearse con ese usuario.
+  useEffect(() => {
+    const nombre = form.nombre_usuario.trim();
+    if (!nombre) return;
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      api.get('/auth/estado-bloqueo', { params: { nombre_usuario: nombre } })
+        .then(({ data }) => {
+          if (data?.bloqueadoHasta) {
+            setBloqueadoHasta(new Date(data.bloqueadoHasta));
+          }
+        })
+        .catch(() => {});
+    }, 500);
+    return () => clearTimeout(debounceRef.current);
+  }, [form.nombre_usuario]);
+
+  // ── Countdown activo mientras hay bloqueo ─────────────────────────────
+  // Único intervalo, creado una sola vez al montar el componente. Lee el
+  // bloqueo vigente desde bloqueadoHastaRef (siempre actualizada) en lugar
+  // de depender de un useEffect que se reinicia cada vez que se recibe un
+  // nuevo objeto Date — así el contador nunca se "congela" por reinicios
+  // del intervalo, ni se ve afectado si dos respuestas async llegan casi
+  // al mismo tiempo.
+  useEffect(() => {
     function tick() {
-      const restante = new Date(bloqueadoHasta) - Date.now();
+      const actual = bloqueadoHastaRef.current;
+      if (!actual) { setTiempoRestante(0); return; }
+
+      const restante = new Date(actual) - Date.now();
       if (restante <= 0) {
-        // Bloqueo expirado → desbloquear automáticamente
         setBloqueadoHasta(null);
         setTiempoRestante(0);
         setIntentosRestantes(3);
         setError('');
-        clearInterval(intervaloRef.current);
+        sessionStorage.removeItem(STORAGE_KEY);
       } else {
         setTiempoRestante(restante);
       }
@@ -60,7 +159,7 @@ export default function LoginPage() {
     tick(); // actualizar inmediatamente
     intervaloRef.current = setInterval(tick, 500);
     return () => clearInterval(intervaloRef.current);
-  }, [bloqueadoHasta]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const bloqueado = bloqueadoHasta && new Date(bloqueadoHasta) > new Date();
 
@@ -73,17 +172,19 @@ export default function LoginPage() {
 
   async function enviar(e) {
     e?.preventDefault();
-    if (cargando || bloqueado) return; // no contar intentos durante bloqueo
+    if (enviandoRef.current || cargando || bloqueado) return; // guard síncrono: bloquea el segundo enviar() aunque cargando aún no se haya re-renderizado
     if (!form.nombre_usuario.trim() || !form.contrasena) {
       setError('Por favor completa todos los campos');
       return;
     }
 
+    enviandoRef.current = true;
     setCargando(true);
     setError('');
 
     try {
       await login(form.nombre_usuario.trim(), form.contrasena);
+      sessionStorage.removeItem(STORAGE_KEY);
       navigate('/inicio', { replace: true });
     } catch (err) {
       const data    = err.response?.data;
@@ -101,11 +202,16 @@ export default function LoginPage() {
       setError(mensaje);
       toast(mensaje, 'danger');
     } finally {
+      enviandoRef.current = false;
       setCargando(false);
     }
   }
 
-  const handleKeyDown = e => { if (e.key === 'Enter' && !bloqueado) enviar(e); };
+  const handleKeyDown = e => {
+    if (e.key !== 'Enter' || bloqueado) return;
+    e.preventDefault(); // evita que Enter también dispare un submit nativo del formulario además de enviar()
+    enviar(e);
+  };
 
   // ── Render ───────────────────────────────────────────────────────────────
   return (

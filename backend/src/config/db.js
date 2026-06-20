@@ -20,7 +20,13 @@ const pool = mysql.createPool({
   connectionLimit: 15,
   queueLimit: 100,
   charset: 'utf8mb4',
-  timezone: '-05:00',
+  // 'Z' (UTC) — mysql2 siempre serializa los Date() de JS usando sus
+  // componentes UTC al escribir (ignora cualquier offset configurado aquí),
+  // así que dejar 'timezone' en un offset distinto (ej. '-05:00') hace que
+  // la LECTURA reinterprete esos valores sumando ese offset de más cada vez
+  // que se relee una fecha — desfase que se acumula en cada ciclo de
+  // bloqueo/desbloqueo. Con 'Z' la escritura y lectura quedan simétricas.
+  timezone: 'Z',
   // Keep-alive: mantiene conexiones abiertas, evita overhead de reconexión
   enableKeepAlive: true,
   keepAliveInitialDelay: 10000,

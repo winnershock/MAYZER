@@ -44,7 +44,7 @@ async function activar(req, res) {
     const usuario = await verificarEsAdmin(res, req.params.id);
     if (!usuario) return;
     await pool.execute(
-      'UPDATE usuario SET activo = 1, intentos_fallidos = 0, bloqueado_hasta = NULL WHERE id = ?',
+      'UPDATE usuario SET activo = 1, intentos_fallidos = 0, nivel_bloqueo = 0, bloqueado_hasta = NULL, ultimo_intento_fallido = NULL WHERE id = ?',
       [req.params.id]
     );
     res.json({ mensaje: 'Cuenta activada correctamente' });

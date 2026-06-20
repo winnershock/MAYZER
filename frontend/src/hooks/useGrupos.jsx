@@ -31,7 +31,12 @@ export function useGrupos(filtrosExtra = {}) {
   const recargar = useCallback(async (paginaOverride) => {
     if (authCargando) return;
 
-    const paginaActual = paginaOverride ?? pagina;
+    // Si recargar() se usa por error como handler directo de un evento del DOM
+    // (ej. onClick={recargar} en vez de onClick={() => recargar()}), React le
+    // pasaría el SyntheticEvent como paginaOverride. Cualquier valor que no sea
+    // un número finito se ignora y se usa la página actual, en vez de dejar
+    // que un objeto se cuele en el querystring como page=[object Object].
+    const paginaActual = Number.isFinite(paginaOverride) ? paginaOverride : pagina;
     setCargando(true);
     setError(null);
     try {

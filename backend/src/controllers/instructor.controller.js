@@ -18,7 +18,7 @@ async function listar(req, res) {
     //    El LEFT JOIN de horas ahora accede solo a grupos del instructor actual.
     const [filas] = await pool.execute(
       `SELECT ins.id, ins.especialidad, ins.experiencia_anios, ins.horas_maximas, ins.activo, ins.telefono, ins.color,
-              u.id AS usuario_id, u.nombre_completo, u.email,
+              u.id AS usuario_id, u.nombre_completo, u.email, u.nombre_usuario,
               COUNT(DISTINCT ga.id)                               AS grupos_activos,
               COALESCE(SUM(TIMESTAMPDIFF(HOUR, ev.hora_inicio, ev.hora_fin)), 0) AS horas_asignadas
        FROM instructor ins

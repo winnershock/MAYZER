@@ -25,7 +25,7 @@ export default function ModalInstructor({ onClose, onDone, base, modo = 'crear' 
     return {
       nombre_completo:   base.nombre_completo  || '',
       email:             base.email            || '',
-      nombre_usuario:    '',  // no editable en este flujo
+      nombre_usuario:    '',  // no editable en este flujo — el real se muestra aparte (ver nombreUsuarioActual)
       contrasena:        '',  // opcional
       especialidad:      base.especialidad     || '',
       experiencia_anios: base.experiencia_anios ?? 0,
@@ -35,6 +35,8 @@ export default function ModalInstructor({ onClose, onDone, base, modo = 'crear' 
       activo:            base.activo !== false,
     };
   });
+
+  const nombreUsuarioActual = base?.nombre_usuario || '';
 
   const [cargando, setCargando] = useState(false);
   const toast = useToast();
@@ -100,6 +102,19 @@ export default function ModalInstructor({ onClose, onDone, base, modo = 'crear' 
               onChange={e => setForm(f => ({ ...f, telefono: onChangeTelefono(e) }))}
               placeholder="3100000000" inputMode="numeric" maxLength={10} />
           </div>
+
+          {esEdicion && (
+            <div className="form-group">
+              <label>Usuario de acceso</label>
+              <input
+                value={nombreUsuarioActual || '—'}
+                disabled
+                readOnly
+                className={s['input-readonly']}
+                title="El usuario de acceso no se puede modificar desde aquí"
+              />
+            </div>
+          )}
 
           {!esEdicion && (
             <>
