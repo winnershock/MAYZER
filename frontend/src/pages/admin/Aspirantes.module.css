@@ -1,9 +1,3 @@
-/* ─────────────────────────────────────────────────────────
-   Aspirantes.module.css — Estilos específicos de la página de Aspirantes
-   Depende de: tokens.css (variables CSS globales)
-───────────────────────────────────────────────────────── */
-
-/* ── Contadores de estado en el page-header ── */
 .statPendiente {
   color: var(--amber);
   font-weight: 700;
@@ -13,7 +7,6 @@
   font-weight: 700;
 }
 
-/* ── Alerta de selección con botón cerrar ── */
 .alertaSeleccion {
   margin-bottom: 16px;
   display: flex;
@@ -27,8 +20,6 @@
   cursor: pointer;
 }
 
-/* ── Barra de acciones masivas ── */
-/* El fondo y borde son dinámicos (color del estado), se aplican inline */
 .barraAcciones {
   display: flex;
   align-items: center;
@@ -43,7 +34,6 @@
   align-items: center;
   gap: 8px;
 }
-/* El fondo del círculo es dinámico (color del estado) */
 .barraAccionesCirculo {
   width: 28px;
   height: 28px;
@@ -68,18 +58,11 @@
   flex-wrap: wrap;
 }
 
-/* ── Select de filtro de curso con ancho mínimo ── */
-.filtroCurso {
-  min-width: 220px;
-}
-
-/* ── Contador de registros ── */
 .totalRegistros {
   font-size: 12px;
   color: var(--text-tertiary);
 }
 
-/* ── Columna de selección (checkbox visual) ── */
 .colCheck {
   text-align: center;
   width: 40px;
@@ -93,19 +76,16 @@
   border-radius: 6px;
   transition: all 0.15s;
   flex-shrink: 0;
-  /* border y background son dinámicos (color del estado) */
 }
 .checkPlaceholder {
   display: inline-block;
   width: 18px;
 }
 
-/* ── Celda de nombre ── */
 .nombreCompleto {
   font-weight: 700;
 }
 
-/* ── Celda de documento ── */
 .celdaDocumento {
   color: var(--text-tertiary);
   font-family: monospace;
@@ -115,12 +95,10 @@
   color: var(--danger);
 }
 
-/* ── Celdas de texto secundario ── */
 .celdaSm {
   font-size: 13px;
 }
 
-/* ── Enlace sin grupo ── */
 .sinGrupo {
   color: var(--text-tertiary);
   font-size: 12px;

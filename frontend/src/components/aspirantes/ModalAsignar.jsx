@@ -1,11 +1,3 @@
-/**
- * components/aspirantes/ModalAsignar.jsx
- * Responsabilidad : Modal para asignar uno o varios aspirantes a un grupo.
- * Exporta         : ModalAsignar (default)
- * Usado en        : pages/admin/Aspirantes.jsx
- * Depende de      : services/index.js, hooks/useToast.jsx, components/common/Icon.jsx,
- *                   utils/fecha.js
- */
 import { useState, useEffect } from 'react';
 import { AspiranteService, GrupoService } from '../../services';
 import { useToast } from '../../hooks/useToast.jsx';
@@ -20,7 +12,6 @@ export default function ModalAsignar({ aspirantes, onClose, onDone, onAlertaCurs
   const [alertaLocal, setAlertaLocal] = useState(null);
   const toast = useToast();
 
-  // Soporta tanto array como objeto único (compatibilidad)
   const lista = Array.isArray(aspirantes) ? aspirantes : aspirantes ? [aspirantes] : [];
 
   useEffect(() => {
@@ -32,7 +23,7 @@ export default function ModalAsignar({ aspirantes, onClose, onDone, onAlertaCurs
         ]);
         const extraer = d => Array.isArray(d) ? d : (d?.grupos ?? []);
         setGrupos([...extraer(a.data), ...extraer(b.data)]);
-      } catch { /* silencioso */ }
+      } catch {}
     })();
   }, []);
 
@@ -70,7 +61,7 @@ export default function ModalAsignar({ aspirantes, onClose, onDone, onAlertaCurs
       const msg = `Los siguientes aspirantes solicitaron un curso diferente al del grupo "${grupo.curso_nombre}": ${nombres}. No es posible asignarlos a este grupo.`;
       setAlertaLocal(msg);
       onAlertaCurso?.(msg);
-      return; // bloquear: no continuar evaluando cupos
+      return;
     }
   }
 
@@ -103,9 +94,6 @@ export default function ModalAsignar({ aspirantes, onClose, onDone, onAlertaCurs
 
     if (asignados.length > 0) {
       const n = asignados.length;
-      // correoEnviado === true → correo enviado correctamente
-      // sinEmail === true    → no había email, no es error del sistema
-      // correoError presente → fallo SMTP real
       const algunError = asignados.some(id => {
         const r = resultadosCorreo[id];
         return r && r.correoError;
@@ -135,7 +123,6 @@ export default function ModalAsignar({ aspirantes, onClose, onDone, onAlertaCurs
           'warn'
         );
       } else {
-        // Mezcla: algunos sin email, otros enviados correctamente
         toast(
           `${n} aspirante${n !== 1 ? 's' : ''} asignado${n !== 1 ? 's' : ''}. Algunas notificaciones no pudieron enviarse (sin correo registrado).`,
           'warn'

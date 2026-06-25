@@ -1,11 +1,3 @@
-/**
- * pages/admin/Instructores.jsx
- * Responsabilidad : Gestión de instructores con filtro mensual, historial y pila de modales.
- * Exporta         : Instructores (default)
- * Depende de      : services/index.js, hooks/useToast.jsx,
- *                   components/instructores/*, components/common/*,
- *                   utils/fecha.js
- */
 import { useState, useEffect, useCallback, useMemo, Fragment } from 'react';
 import { InstructorService, GrupoService } from '../../services';
 import { useToast } from '../../hooks/useToast.jsx';
@@ -20,19 +12,15 @@ import { GrpEstadoBadge } from '../../components/common/EstadoBadge.jsx';
 import { MESES, ANIOS_FILTRO } from '../../constants/index.js';
 import { solapaCon, formatearFecha } from '../../utils/fecha.js';
 
-
 export default function Instructores() {
   const [instructores,      setInstructores]      = useState([]);
   const [grupos,            setGrupos]            = useState([]);
-  // Stack de modales: el último elemento es el visible.
-  // pushModal() apila uno nuevo; popModal() cierra el último (vuelve al anterior).
   const [modalStack,        setModalStack]        = useState([]);
   const modal      = modalStack[modalStack.length - 1] ?? null;
   const pushModal  = (m) => setModalStack(prev => [...prev, m]);
   const popModal   = () => setModalStack(prev => prev.slice(0, -1));
   const clearModal = () => setModalStack([]);
   const [expandidos,        setExpandidos]        = useState(new Set());
-  const [buscar,            setBuscar]            = useState('');
   const [historialMes,      setHistorialMes]      = useState(new Date().getMonth());
   const [historialAnio,     setHistorialAnio]     = useState(new Date().getFullYear());
   const [historialDatos,    setHistorialDatos]    = useState([]);
@@ -69,15 +57,10 @@ export default function Instructores() {
     return acc;
   }, {}), [gruposDelMes]);
 
-  const instructoresAsignados = useMemo(() => instructores.filter(i => {
-    if (!gruposPorInstructor[i.id]) return false;
-    if (buscar) {
-      const q = buscar.toLowerCase();
-      return i.nombre_completo.toLowerCase().includes(q) ||
-             (i.especialidad || '').toLowerCase().includes(q);
-    }
-    return true;
-  }), [instructores, buscar, gruposPorInstructor]);
+  const instructoresAsignados = useMemo(
+    () => instructores.filter(i => !!gruposPorInstructor[i.id]),
+    [instructores, gruposPorInstructor],
+  );
 
   const anteriorMes = () => {
     if (historialMes === 0) { setHistorialMes(11); setHistorialAnio(a => a - 1); }
@@ -133,7 +116,6 @@ export default function Instructores() {
 
   return (
     <div>
-      {/* ── Encabezado ── */}
       <div className="page-header">
         <div>
           <p>
@@ -156,17 +138,7 @@ export default function Instructores() {
         </div>
       </div>
 
-      {/* ── Barra de filtros ── */}
       <div className={`filters-bar ${s.filtersBar}`}>
-        <div className="filter-group">
-          <label>Buscar</label>
-          <input
-            className="filter-input filter-search"
-            placeholder="Nombre o especialidad..."
-            value={buscar}
-            onChange={e => setBuscar(e.target.value)}
-          />
-        </div>
         <div className={`filter-group ${s.filtroHistorial}`}>
           <label>Período</label>
           <div className={s.filtroHistorialInputs}>
@@ -182,14 +154,8 @@ export default function Instructores() {
             <button className="btn btn-outline btn-sm" onClick={siguienteMes}>▶</button>
           </div>
         </div>
-        {buscar && (
-          <div className="filters-end">
-            <button className="btn btn-outline btn-sm" onClick={() => setBuscar('')}>Limpiar</button>
-          </div>
-        )}
       </div>
 
-      {/* ── Tabla: Instructores Asignados ── */}
       <div className={`card ${s.cardTabla}`}>
         <div className="table-wrap">
           {instructoresAsignados.length === 0 ? (
@@ -315,10 +281,6 @@ export default function Instructores() {
           )}
         </div>
       </div>
-
-      {/* ════════ MODALES ════════ */}
-
-      {/* ════════ MODALES (stack: el último apilado es el visible) ════════ */}
 
       {modal?.tipo === 'crear' && (
         <ModalInstructor modo="crear"

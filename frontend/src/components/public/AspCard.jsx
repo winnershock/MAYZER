@@ -1,10 +1,3 @@
-/**
- * components/public/AspCard.jsx
- * Responsabilidad : Tarjeta acordeón para datos de un aspirante en el formulario público.
- * Exporta         : AspCard (default)
- * Usado en        : pages/public/FormPublico.jsx
- * Depende de      : components/common/Icon.jsx, constants/index.js, utils/validaciones.js
- */
 import { useState, useRef } from 'react';
 import Icon from '../common/Icon.jsx';
 import {
@@ -36,7 +29,6 @@ export default function AspCard({ asp, idx, onChange, onRemove, canRemove, pdfFi
 
   return (
     <div className="fp-asp-card">
-      {/* Header */}
       <div
         className={`fp-asp-header${open ? ' open' : ''}`}
         onClick={() => setOpen(o => !o)}
@@ -59,11 +51,9 @@ export default function AspCard({ asp, idx, onChange, onRemove, canRemove, pdfFi
         <span className="fp-asp-chevron">▼</span>
       </div>
 
-      {/* Body */}
       {open && (
         <div className="fp-asp-body">
 
-          {/* ── Identificación ── */}
           <div className="fp-grid">
             <div className="fp-field">
               <label>Tipo de documento</label>
@@ -151,7 +141,6 @@ export default function AspCard({ asp, idx, onChange, onRemove, canRemove, pdfFi
             </div>
           </div>
 
-          {/* ── Salud ── */}
           <div className="fp-section-label">Información de salud</div>
           <div className="fp-grid">
             <div className="fp-field">
@@ -206,7 +195,6 @@ export default function AspCard({ asp, idx, onChange, onRemove, canRemove, pdfFi
             </div>
           </div>
 
-          {/* ── Emergencia ── */}
           <div className="fp-section-label">En caso de emergencia avisar a:</div>
           <div className="fp-grid">
             <div className="fp-field">
@@ -221,7 +209,6 @@ export default function AspCard({ asp, idx, onChange, onRemove, canRemove, pdfFi
             </div>
           </div>
 
-          {/* ── PDF Upload ── */}
           <div className="fp-section-label">Documento de identidad</div>
           <div className={`fp-pdf-zone${pdfFile ? ' active' : ''}`}>
             <div className="fp-pdf-icon"><Icon name={pdfFile ? 'check-circle' : 'file-text'} size={22} /></div>

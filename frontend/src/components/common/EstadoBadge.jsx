@@ -1,11 +1,3 @@
-/**
- * components/common/EstadoBadge.jsx
- * Responsabilidad : Badges de estado para aspirantes, solicitudes y grupos.
- * Exporta         : ASP_ESTADO_MAP, SOL_ESTADO_MAP, GRP_ESTADO_MAP,
- *                   AspEstadoBadge, SolEstadoBadge, GrpEstadoBadge
- * Usado en        : pages/admin/Aspirantes.jsx, pages/admin/Solicitudes.jsx,
- *                   pages/admin/Grupos.jsx y modales relacionados.
- */
 
 export const ASP_ESTADO_MAP = {
   PENDIENTE:    ['badge-warn',    'Pendiente'],
@@ -30,8 +22,6 @@ export const GRP_ESTADO_MAP = {
 
 import { memo } from 'react';
 
-// ── Memoizados: evitan re-renderizados cuando el estado no cambia
-//    (tablas con 25 filas × 1 badge = hasta 25 renders evitados por paginación)
 const EstadoBadge = memo(function EstadoBadge({ estado, mapa }) {
   const map = mapa || ASP_ESTADO_MAP;
   const [cls, txt] = map[estado] || ['badge-gray', estado || '–'];

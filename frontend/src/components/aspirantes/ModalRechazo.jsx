@@ -1,10 +1,3 @@
-/**
- * components/aspirantes/ModalRechazo.jsx
- * Responsabilidad : Modal para rechazar un aspirante con motivo obligatorio (mín. 10 caracteres).
- * Exporta         : ModalRechazo (default)
- * Usado en        : pages/admin/Aspirantes.jsx
- * Depende de      : services/index.js, hooks/useToast.jsx
- */
 
 import { useState } from 'react';
 import { AspiranteService } from '../../services';

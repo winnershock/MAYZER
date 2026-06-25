@@ -1,5 +1,4 @@
 
-/* ModalDetalleGrupo.module.css – Inline styles migrados */
 .campo-fila    { display: flex; gap: 8px; font-size: 13px; padding: 4px 0; }
 .campo-lbl     { font-weight: 700; min-width: 130px; color: var(--text-tertiary); flex-shrink: 0; }
 .asp-lista     { display: flex; flex-direction: column; gap: 6px; max-height: 300px; overflow-y: auto; }

@@ -1,10 +1,3 @@
-/**
- * components/cursos/ModalCurso.jsx
- * Responsabilidad : Modal de creación y edición de cursos del catálogo.
- * Exporta         : ModalCurso (default)
- * Usado en        : pages/admin/Cursos.jsx
- * Depende de      : services/index.js, hooks/useToast.jsx
- */
 import { useState } from 'react';
 import { CursoService } from '../../services';
 import { useToast } from '../../hooks/useToast.jsx';
@@ -36,7 +29,6 @@ export default function ModalCurso({ curso, onClose, onDone }) {
       toast(curso ? 'Curso actualizado' : 'Curso creado correctamente', 'sena');
       onDone();
     } catch (e) {
-      // Mensaje específico cuando el backend bloquea por grupos finalizados
       const mensaje = e.response?.data?.error
         || (e.response?.data?.codigo === 'CURSO_BLOQUEADO'
             ? 'Este curso no puede editarse porque tiene grupos finalizados asociados.'

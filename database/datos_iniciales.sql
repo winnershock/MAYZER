@@ -75,7 +75,7 @@ INSERT INTO ciudad (nombre, departamento) VALUES
 -- ════════════════════════════════════════════════════════════════════════════
 
 INSERT INTO usuario (nombre_completo, nombre_usuario, email, contrasena_hash, rol_id, activo) VALUES
-  ('Maira Administradora SENA',   'maira.admin',       'maira@sena.edu.co',          '$2b$12$/EUW2qwpads7mWgZEh4npeNvGKkM2JsFD.wRA4s1HP7Ql2z1QvzMq', 1, TRUE),
+  ('Mayra Administradora SENA',   'mayra.admin',       'mayra@sena.edu.co',          '$2b$12$/EUW2qwpads7mWgZEh4npeNvGKkM2JsFD.wRA4s1HP7Ql2z1QvzMq', 1, TRUE),
   ('Carlos Instructor Sistemas',  'carlos.instructor', 'carlos.instructor@sena.edu.co', '$2b$12$qlLzEc3aqY933Y.hdL.ihuolIKhGCg7sUEbC3tlDDZboSyqkRqxX6', 2, TRUE),
   ('Super Usuario Sistema',       'super.usuario',     'super@sena.edu.co',           '$2b$12$lpZWRmPKEaqvDOJezs2XJeJTw0EQxjlgQeK23.ezHWmF7hMzbTG3i', 3, TRUE),
   ('Juliana Instructora SENA',    'juliana.instructor','juliana.instructor@sena.edu.co','$2b$12$/EUW2qwpads7mWgZEh4npeNvGKkM2JsFD.wRA4s1HP7Ql2z1QvzMq', 2, TRUE),
@@ -137,7 +137,7 @@ INSERT INTO empresa (nombre, nit, email, telefono, tipo_entidad, nombre_contacto
   ('Constructora Palmar S.A',              '900789123-3', 'capacitacion@palmar.com',       '6024567890', 'empresa',
    'Héctor Giraldo',   'Director Proyectos',     3,  'Av 4 Norte #54-20, Cali'),
   ('Grupo SENA – Aprendices TSA 2025',     '890001112-0', 'grupo.tsa@sena.edu.co',         '6025001122', 'grupo SENA',
-   'Maira Admin',      'Instructora',            6,  'SENA Sede Industrial Palmira'),
+   'Mayra Admin',      'Instructora',            6,  'SENA Sede Industrial Palmira'),
   ('Pedro Ramírez Independiente',          '1091234321',  'pedro.ramirez@gmail.com',       '3045678905', 'persona',
    'Pedro Ramírez',    '',                       6,  'Cl 12 #8-30, Palmira'),
   ('ConstruValle S.A.S',                   '900445566-4', 'rrhh@construvalle.com',         '6026001234', 'empresa',

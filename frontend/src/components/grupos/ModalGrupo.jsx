@@ -1,10 +1,3 @@
-/**
- * components/grupos/ModalGrupo.jsx
- * Responsabilidad : Modal de creación y edición de grupos de formación.
- * Exporta         : ModalGrupo (default)
- * Usado en        : pages/admin/Grupos.jsx
- * Depende de      : services/index.js, hooks/useToast.jsx
- */
 
 import { useState, useEffect } from 'react';
 import { GrupoService } from '../../services';
@@ -35,7 +28,6 @@ export default function ModalGrupo({ grupo, cursos, instructores, lugares, onClo
   const toast = useToast();
   const cambiar = e => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
 
-  // Al abrir en modo crear, calcular siguiente número desde g.codigo
   useEffect(() => {
     if (!grupo) {
       GrupoService.listar({ limit: 500 }).then(r => {

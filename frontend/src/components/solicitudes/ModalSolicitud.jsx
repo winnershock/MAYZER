@@ -1,38 +1,17 @@
-/**
- * components/solicitudes/ModalSolicitud.jsx
- * Responsabilidad : Modal de detalle y cambio de estado de una solicitud de formación.
- * Exporta         : ModalSolicitud (default)
- * Usado en        : pages/admin/Solicitudes.jsx
- * Depende de      : services/index.js, hooks/useToast.jsx,
- *                   components/common/EstadoBadge.jsx, components/common/TipoEntidadBadge.jsx
- */
 
 import { useState, useEffect } from 'react';
 import { SolicitudService } from '../../services';
-import { useToast } from '../../hooks/useToast.jsx';
 import { SolEstadoBadge, AspEstadoBadge } from '../common/EstadoBadge.jsx';
 
 import TipoEntidadBadge from '../common/TipoEntidadBadge.jsx';
 import s from './ModalSolicitud.module.css';
 
-export default function ModalSolicitud({ id, onClose, onUpdate }) {
+export default function ModalSolicitud({ id, onClose }) {
   const [sol, setSol] = useState(null);
-  const toast = useToast();
 
   useEffect(() => {
     SolicitudService.obtener(id).then(r => setSol(r.data)).catch(() => {});
   }, [id]);
-
-  async function cambiarEstado(estado) {
-    try {
-      await SolicitudService.cambiarEstado(id, estado);
-      toast('Estado actualizado correctamente', 'sena');
-      onUpdate();
-      onClose();
-    } catch (e) {
-      toast(e.response?.data?.error || 'Error al actualizar', 'danger');
-    }
-  }
 
   if (!sol) return (
     <div className="modal-overlay">

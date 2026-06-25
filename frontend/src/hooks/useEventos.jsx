@@ -1,10 +1,3 @@
-/**
- * hooks/useEventos.jsx
- * Responsabilidad : Hook para cargar eventos del calendario con cancelación via AbortController.
- * Exporta         : useEventos
- * Usado en        : pages/admin/Calendario.jsx
- * Depende de      : services/evento.service.js, hooks/useAuth.jsx
- */
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { EventoService } from '../services';
 import { useAuth } from './useAuth.jsx';

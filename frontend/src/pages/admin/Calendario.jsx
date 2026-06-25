@@ -1,11 +1,3 @@
-/**
- * pages/admin/Calendario.jsx
- * Responsabilidad : Calendario interactivo de eventos con creación por rango de fechas.
- * Exporta         : Calendario (default)
- * Depende de      : hooks/useEventos.jsx, services/index.js,
- *                   components/grupos/ModalEventoCalendario.jsx,
- *                   components/common/Icon.jsx
- */
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { GrupoService, EmpresaService, EventoService, InstructorService } from '../../services';
 import { useToast } from '../../hooks/useToast.jsx';
@@ -22,7 +14,6 @@ const DIAS         = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 const colorDark  = gid => CALENDAR_PALETTE_DARK[Number(gid) % CALENDAR_PALETTE_DARK.length];
 const colorLight = gid => CALENDAR_PALETTE_LIGHT[Number(gid) % CALENDAR_PALETTE_LIGHT.length];
 
-// Genera colores a partir del color del instructor si está disponible
 function colorDeEvento(evento, instructores) {
   const inst = instructores && instructores.find(i => i.id === evento.instructor_id);
   if (inst?.color) {
@@ -211,20 +202,17 @@ export default function Calendario() {
   const [modal,     setModal]     = useState(null);
   const [selEvento, setSelEvento] = useState(null);
 
-  // Sistema de seleccion unificado: Set de numeros de dia del mes actual
   const [diasSeleccionados, setDiasSeleccionados] = useState(new Set());
 
-  // Estado de arrastre
   const [arrastrando,    setArrastrando]    = useState(false);
   const [diaArrastreIni, setDiaArrastreIni] = useState(null);
   const diasPreviosRef = useRef(new Set());
-  const esDragRef = useRef(false); // true si el mouse se movio a otro dia
+  const esDragRef = useRef(false);
 
-  // Menu contextual
   const [menuCtx, setMenuCtx] = useState(null);
   const [confirmState, setConfirmState] = useState(null);
 
-  const [diaModal, setDiaModal] = useState(null); // { dia, eventos }
+  const [diaModal, setDiaModal] = useState(null);
 
   const { esAdmin } = useAuth();
   const toast = useToast();
@@ -267,7 +255,6 @@ export default function Calendario() {
   const hoy       = useCallback(() => { resetSeleccion(); setMes(ahora.getMonth()); setAnio(ahora.getFullYear()); }, [resetSeleccion, ahora]);
   const cerrarYRecargar = useCallback(() => { setModal(null); recargarEventos(); resetSeleccion(); }, [recargarEventos, resetSeleccion]);
 
-  // Cierre global del arrastre si el mouse sube fuera del grid
   useEffect(() => {
     function handleGlobalMouseUp() {
       if (arrastrando) {
@@ -295,7 +282,6 @@ export default function Calendario() {
     if (celda.dia !== diaArrastreIni) {
       esDragRef.current = true;
     }
-    // Actualizar seleccion en tiempo real: previos UNION rango actual
     const desde = Math.min(diaArrastreIni, celda.dia);
     const hasta = Math.max(diaArrastreIni, celda.dia);
     setDiasSeleccionados(() => {
@@ -310,7 +296,6 @@ export default function Calendario() {
     if (e.button !== 0) return;
 
     if (!esDragRef.current && celda.actual && diaArrastreIni === celda.dia) {
-      // Click simple: toggle
       setDiasSeleccionados(() => {
         const next = new Set(diasPreviosRef.current);
         if (next.has(celda.dia)) {
@@ -321,7 +306,6 @@ export default function Calendario() {
         return next;
       });
     }
-    // Si fue arrastre real, los dias ya estan actualizados via handleMouseEnter
 
     setArrastrando(false);
     setDiaArrastreIni(null);

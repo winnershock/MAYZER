@@ -1,21 +1,9 @@
-/**
- * controllers/curso.controller.js
- * Responsabilidad : CRUD del catálogo de cursos (los cursos nunca se eliminan físicamente).
- * Exporta         : listar, crear, actualizar, desactivar, activar
- * Usado en        : routes/curso.routes.js
- * Depende de      : config/db.js (pool, CAT), utils/response.utils.js
- */
 const { pool, CAT }   = require('../config/db');
 const { handleError } = require('../utils/response.utils');
+const { construirFiltroPeriodo } = require('../utils/db.utils');
 
-// Estados de grupo que bloquean la edición del curso
 const ESTADOS_FINALES = [CAT.grpEstado.FINALIZADO, CAT.grpEstado.CANCELADO];
 
-/**
- * Verifica si un curso tiene grupos en estado final (finalizado o cancelado).
- * @param {number} cursoId
- * @returns {Promise<boolean>}
- */
 async function tieneGruposFinalizados(cursoId) {
   const placeholders = ESTADOS_FINALES.map(() => '?').join(', ');
   const [filas] = await pool.execute(
@@ -27,28 +15,40 @@ async function tieneGruposFinalizados(cursoId) {
   return filas.length > 0;
 }
 
-// ── GET /api/cursos ───────────────────────────────────────
 async function listar(req, res) {
   try {
-    // Por defecto solo cursos activos; ?todos=1 incluye inactivos (uso interno/reportes)
+    const { anio, mes } = req.query;
     const soloActivos = req.query.todos !== '1';
-    const condicion = soloActivos
+    let condicion = soloActivos
       ? 'WHERE deleted_at IS NULL AND activo = 1'
       : 'WHERE deleted_at IS NULL';
+
+    const params = [];
+    const periodo = construirFiltroPeriodo(anio, mes, 'created_at');
+    if (periodo.filtro) {
+      condicion += ' ' + periodo.filtro;
+      params.push(...periodo.params);
+    }
 
     const [filas] = await pool.execute(
       `SELECT id, nombre, descripcion, requerimientos_inscripcion,
               intensidad_horaria, certificable, activo, created_at
-       FROM curso ${condicion} ORDER BY nombre`
+       FROM curso ${condicion} ORDER BY nombre`,
+      params
     );
 
-    // Anotar cada curso con si tiene grupos finalizados (para que el frontend bloquee el botón editar)
-    const cursosConBloqueo = await Promise.all(
-      filas.map(async (c) => ({
-        ...c,
-        bloqueado: await tieneGruposFinalizados(c.id),
-      }))
+    const placeholders = ESTADOS_FINALES.map(() => '?').join(', ');
+    const [filasBloqueados] = await pool.execute(
+      `SELECT DISTINCT curso_id FROM grupo
+       WHERE estado_id IN (${placeholders}) AND deleted_at IS NULL`,
+      ESTADOS_FINALES
     );
+    const idsBloqueados = new Set(filasBloqueados.map(f => f.curso_id));
+
+    const cursosConBloqueo = filas.map(c => ({
+      ...c,
+      bloqueado: idsBloqueados.has(c.id),
+    }));
 
     res.json(cursosConBloqueo);
   } catch (e) {
@@ -56,7 +56,6 @@ async function listar(req, res) {
   }
 }
 
-// ── POST /api/cursos ──────────────────────────────────────
 async function crear(req, res) {
   const { nombre, descripcion, requerimientos_inscripcion, intensidad_horaria } = req.body;
   if (!nombre || !intensidad_horaria) {
@@ -75,13 +74,11 @@ async function crear(req, res) {
   }
 }
 
-// ── PUT /api/cursos/:id ───────────────────────────────────
 async function actualizar(req, res) {
   const cursoId = req.params.id;
   const { nombre, descripcion, requerimientos_inscripcion, intensidad_horaria } = req.body;
 
   try {
-    // Validar que el curso exista y no esté eliminado
     const [filaCurso] = await pool.execute(
       'SELECT id FROM curso WHERE id = ? AND deleted_at IS NULL',
       [cursoId]
@@ -90,7 +87,6 @@ async function actualizar(req, res) {
       return res.status(404).json({ error: 'Curso no encontrado' });
     }
 
-    // Bloquear edición si tiene grupos finalizados
     const bloqueado = await tieneGruposFinalizados(cursoId);
     if (bloqueado) {
       return res.status(409).json({
@@ -111,8 +107,6 @@ async function actualizar(req, res) {
   }
 }
 
-// ── DELETE /api/cursos/:id  →  DESACTIVAR (soft) ──────────
-// Los cursos nunca se eliminan físicamente. Esta ruta desactiva el curso.
 async function desactivar(req, res) {
   const cursoId = req.params.id;
   try {
@@ -137,7 +131,6 @@ async function desactivar(req, res) {
   }
 }
 
-// ── PATCH /api/cursos/:id/activar ─────────────────────────
 async function activar(req, res) {
   const cursoId = req.params.id;
   try {

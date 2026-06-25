@@ -1,9 +1,3 @@
-/* ─────────────────────────────────────────────────────────
-   inicio.module.css — Dashboard Inicio
-   Estilos específicos de los list-items del panel de inicio.
-   Depende de: tokens.css
-───────────────────────────────────────────────────────── */
-
 .inicio-list-item { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; gap: 14px; align-items: center; cursor: pointer; transition: background .15s; }
 .inicio-list-item:last-child { border-bottom: none; }
 .inicio-list-icon { width: 42px; height: 42px; border-radius: var(--r-sm); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
@@ -16,7 +10,6 @@
 .inicio-list-date  { font-size: 11px; color: var(--subtle); }
 .inicio-list-item:hover { background: var(--brand-light); }
 
-/* ── Inline styles migrados a CSS ── */
 .inicio-empty-lg   { padding: 48px; }
 .inicio-empty-md   { padding: 32px; }
 .inicio-section-two { margin-bottom: 18px; }
@@ -38,7 +31,6 @@
   .inicio-resumen-grid { grid-template-columns: 1fr; }
 }
 
-/* ── Header del dashboard ── */
 .inicio-header {
   background: linear-gradient(135deg, var(--brand-light) 0%, var(--surface) 60%);
   border: 1px solid rgba(255, 103, 25, 0.12);

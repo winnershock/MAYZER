@@ -1,10 +1,3 @@
-/**
- * components/instructores/ModalInstructor.jsx
- * Responsabilidad : Modal de creación y edición de instructores.
- * Exporta         : ModalInstructor (default)
- * Usado en        : pages/admin/Instructores.jsx
- * Depende de      : services/index.js, hooks/useToast.jsx, utils/validaciones.js
- */
 import { useState } from 'react';
 import { InstructorService } from '../../services';
 import { useToast } from '../../hooks/useToast.jsx';
@@ -21,12 +14,11 @@ export default function ModalInstructor({ onClose, onDone, base, modo = 'crear' 
 
   const [form, setForm] = useState(() => {
     if (!base) return { ...VACIO };
-    // editar
     return {
       nombre_completo:   base.nombre_completo  || '',
       email:             base.email            || '',
-      nombre_usuario:    '',  // no editable en este flujo — el real se muestra aparte (ver nombreUsuarioActual)
-      contrasena:        '',  // opcional
+      nombre_usuario:    base.nombre_usuario   || '',
+      contrasena:        '',
       especialidad:      base.especialidad     || '',
       experiencia_anios: base.experiencia_anios ?? 0,
       horas_maximas:     base.horas_maximas    || 40,
@@ -35,8 +27,6 @@ export default function ModalInstructor({ onClose, onDone, base, modo = 'crear' 
       activo:            base.activo !== false,
     };
   });
-
-  const nombreUsuarioActual = base?.nombre_usuario || '';
 
   const [cargando, setCargando] = useState(false);
   const toast = useToast();
@@ -105,14 +95,9 @@ export default function ModalInstructor({ onClose, onDone, base, modo = 'crear' 
 
           {esEdicion && (
             <div className="form-group">
-              <label>Usuario de acceso</label>
-              <input
-                value={nombreUsuarioActual || '—'}
-                disabled
-                readOnly
-                className={s['input-readonly']}
-                title="El usuario de acceso no se puede modificar desde aquí"
-              />
+              <label>Nombre de usuario</label>
+              <input value={form.nombre_usuario} disabled readOnly
+                className={s['input-readonly']} />
             </div>
           )}
 

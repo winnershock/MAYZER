@@ -1,12 +1,3 @@
-/* ─────────────────────────────────────────────────────────
-   formpublico.css — Wizard público fp-* (clases globales)
-   Incluye: shell, topbar, steps, heading, cards, grid,
-   campos, PDF upload, acordeón aspirantes, tipo selector,
-   acciones, pantalla éxito, consent, error.
-   Depende de: tokens.css
-───────────────────────────────────────────────────────── */
-
-/* ── Shell ── */
 .fp-shell {
   min-height: 100vh;
   background: #f4f4f8;
@@ -15,7 +6,6 @@
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
 }
 
-/* ── Topbar ── */
 .fp-topbar {
   background: #fff;
   border-bottom: 1px solid #e8e8ed;
@@ -41,7 +31,6 @@
 .fp-topbar-name { font-size: 16px; font-weight: 800; color: #FF6719; letter-spacing: .3px; }
 .fp-topbar-sub  { font-size: 11px; color: #aaa; font-weight: 400; }
 
-/* ── Botón certificado SENA + tooltip ────────────────────── */
 .fp-cert-wrap {
   position: relative;
   display: inline-flex;
@@ -112,8 +101,6 @@
   .fp-cert-tooltip { width: 240px; right: -10px; }
 }
 
-
-/* ── Body wrapper ── */
 .fp-body {
   flex: 1;
   display: flex;
@@ -126,7 +113,6 @@
   box-sizing: border-box;
 }
 
-/* ── Step indicator ── */
 .fp-steps {
   display: flex;
   align-items: center;
@@ -143,7 +129,6 @@
 .fp-step-dot.active { width: 28px; border-radius: 4px; background: #FF6719; }
 .fp-step-dot.done   { background: rgba(255,103,25,.35); }
 
-/* ── Page heading ── */
 .fp-heading { text-align: center; margin-bottom: 32px; width: 100%; }
 .fp-heading h1 {
   font-size: 26px; font-weight: 800;
@@ -158,7 +143,6 @@
   padding: 4px 16px; border-radius: 99px; margin-top: 10px;
 }
 
-/* ── Card ── */
 .fp-card {
   width: 100%;
   background: #fff;
@@ -176,16 +160,13 @@
   display: flex; align-items: center; gap: 8px;
 }
 
-/* ── Grid ── */
 .fp-grid      { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 18px; }
 .fp-grid-full { grid-column: 1 / -1; }
 
-/* ── Campo individual ── */
 .fp-field { display: flex; flex-direction: column; gap: 5px; }
 .fp-field label { font-size: 12px; font-weight: 650; color: #4a4a5a; letter-spacing: .015em; line-height: 1; }
 .req { color: #FF6719; margin-left: 2px; }
 
-/* ── Inputs, selects, textareas ── */
 .fp-field input,
 .fp-field select,
 .fp-field textarea {
@@ -224,7 +205,6 @@
 .fp-field textarea { resize: vertical; min-height: 80px; line-height: 1.55; }
 .fp-field-hint { font-size: 11px; color: #aaa; margin-top: 2px; line-height: 1.4; }
 
-/* ── Separador de sección ── */
 .fp-section-label {
   font-size: 11px; font-weight: 750; color: #a0a0b0;
   text-transform: uppercase; letter-spacing: .08em;
@@ -237,7 +217,6 @@
   margin-top: 0; padding-top: 0; border-top: none;
 }
 
-/* ── PDF Upload zone ── */
 .fp-pdf-zone {
   border: 2px dashed #dde0ea;
   border-radius: 14px;
@@ -261,7 +240,6 @@
 .fp-pdf-sub   { font-size: 11.5px; color: #aaa; margin-top: 3px; line-height: 1.4; }
 .fp-pdf-zone.active .fp-pdf-sub { color: #b34400; }
 
-/* ── Acordeón aspirante ── */
 .fp-asp-wrap { display: flex; flex-direction: column; gap: 12px; }
 .fp-asp-card {
   border: 1.5px solid #e4e4ec;
@@ -292,7 +270,6 @@
 .fp-asp-header.open .fp-asp-chevron { transform: rotate(180deg); }
 .fp-asp-body { padding: 22px 24px 24px; display: flex; flex-direction: column; }
 
-/* ── Tipo selector (step 1) ── */
 .fp-tipo-list   { width: 100%; display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px; }
 .fp-tipo-option {
   width: 100%; background: #fff;
@@ -327,7 +304,6 @@
 }
 .fp-tipo-option.selected .fp-tipo-check-dot { opacity: 1; }
 
-/* ── Pantalla éxito ── */
 .fp-success { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
 .fp-success-card {
   background: #fff; border-radius: 24px;
@@ -355,7 +331,6 @@
 .fp-success-card h2 { font-size: 22px; font-weight: 800; color: #111; margin-bottom: 8px; }
 .fp-success-card p  { font-size: 14px; color: #888; line-height: 1.65; margin-bottom: 28px; }
 
-/* ── Botones de acción ── */
 .fp-actions { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 4px; }
 .fp-btn-primary {
   width: 100%; max-width: 340px;
@@ -379,7 +354,6 @@
 }
 .fp-btn-ghost:hover { color: #FF6719; background: rgba(255,103,25,.07); }
 
-/* ── Consent y error ── */
 .fp-consent {
   width: 100%; background: #f8f8fc;
   border: 1px solid #e4e4ec; border-radius: 12px;
@@ -396,7 +370,6 @@
   display: flex; align-items: center; gap: 10px;
 }
 
-/* ── Responsive ── */
 @media (max-width: 640px) {
   .fp-topbar     { padding: 0 16px; }
   .fp-body       { padding: 24px 12px 56px; }

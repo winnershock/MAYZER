@@ -1,17 +1,14 @@
-/**
- * pages/admin/Empresas.jsx
- * Responsabilidad : Listado y búsqueda de empresas registradas en el sistema.
- * Exporta         : Empresas (default)
- * Depende de      : services/index.js, hooks/useToast.jsx, components/common/*
- */
 
 import { useState, useEffect, useCallback } from 'react';
 import { EmpresaService } from '../../services';
 import Icon from '../../components/common/Icon.jsx';
 import Paginador from '../../components/common/Paginador.jsx';
+import FiltrosBar from '../../components/common/FiltrosBar.jsx';
 import s from './Empresas.module.css';
 
 const LIMITE = 25;
+const CAMPOS_FILTRO = ['nombre', 'nit', 'ciudad', 'anio', 'mes'];
+const FILTROS_INICIAL = { nombre: '', nit: '', ciudad_id: '', anio: '', mes: '' };
 
 function FilaDetalle({ label, value }) {
   if (!value && value !== 0) return null;
@@ -32,7 +29,6 @@ function PanelDetalle({ empresa, onClose }) {
           <span>{empresa.nombre}</span>
         </div>
 
-        {/* Sección: Identificación */}
         <div className={s.seccion}>
           <div className={s.seccionLabel}>Identificación</div>
           <div className={s.seccionGrid}>
@@ -43,7 +39,6 @@ function PanelDetalle({ empresa, onClose }) {
           </div>
         </div>
 
-        {/* Sección: Contacto */}
         <div className={s.seccion}>
           <div className={s.seccionLabel}>Contacto</div>
           <div className={s.seccionGrid}>
@@ -54,7 +49,6 @@ function PanelDetalle({ empresa, onClose }) {
           </div>
         </div>
 
-        {/* Sección: Ubicación */}
         <div className={s.seccion}>
           <div className={s.seccionLabel}>Ubicación</div>
           <div className={s.seccionGrid}>
@@ -64,7 +58,6 @@ function PanelDetalle({ empresa, onClose }) {
           </div>
         </div>
 
-        {/* Sección: Actividad */}
         <div className={s.seccion}>
           <div className={s.seccionLabel}>Actividad en MAYZER</div>
           <div className={s.seccionGrid}>
@@ -85,12 +78,27 @@ export default function Empresas() {
   const [empresas, setEmpresas] = useState([]);
   const [total,    setTotal]    = useState(0);
   const [pagina,   setPagina]   = useState(1);
-  const [buscar,   setBuscar]   = useState('');
+  const [filtros,  setFiltros]  = useState(FILTROS_INICIAL);
   const [detalle,  setDetalle]  = useState(null);
+  const [ciudades, setCiudades] = useState([]);
+
+  const f = useCallback((k, v) => setFiltros(p => ({ ...p, [k]: v })), []);
+  const limpiar = useCallback(() => setFiltros(FILTROS_INICIAL), []);
+
+  useEffect(() => {
+    EmpresaService.listarCiudades().then(r => setCiudades(r.data)).catch(() => {});
+  }, []);
 
   const cargar = useCallback(() => {
     const t = setTimeout(() => {
-      EmpresaService.listar({ buscar, limit: LIMITE, page: pagina })
+      const params = { limit: LIMITE, page: pagina };
+      if (filtros.nombre)    params.nombre    = filtros.nombre;
+      if (filtros.nit)       params.nit       = filtros.nit;
+      if (filtros.ciudad_id) params.ciudad_id = filtros.ciudad_id;
+      if (filtros.anio)      params.anio      = filtros.anio;
+      if (filtros.mes)       params.mes       = filtros.mes;
+
+      EmpresaService.listar(params)
         .then(r => {
           const data = r.data;
           if (Array.isArray(data)) {
@@ -104,9 +112,9 @@ export default function Empresas() {
         .catch(() => {});
     }, 300);
     return () => clearTimeout(t);
-  }, [buscar, pagina]);
+  }, [filtros, pagina]);
 
-  useEffect(() => { setPagina(1); }, [buscar]);
+  useEffect(() => { setPagina(1); }, [filtros]);
   useEffect(() => cargar(), [cargar]);
 
   const totalPaginas = Math.max(1, Math.ceil(total / LIMITE));
@@ -119,12 +127,14 @@ export default function Empresas() {
         </div>
         <a href="/solicitud" target="_blank" className="btn btn-outline"><Icon name="send" size={13} /> Abrir formulario público</a>
       </div>
-      <div className="filters-bar">
-        <div className="filter-group">
-          <label>Buscar</label>
-          <input className="filter-input filter-search" placeholder="Buscar nombre o NIT..." value={buscar} onChange={e=>setBuscar(e.target.value)}/>
-        </div>
-      </div>
+      <FiltrosBar
+        campos={CAMPOS_FILTRO}
+        valores={filtros}
+        onChange={f}
+        onLimpiar={limpiar}
+        ciudades={ciudades}
+        labelBusquedaNombre="Empresa"
+      />
       <div className="card">
         <div className="card-header">
           <span className="card-title">Directorio de empresas</span>

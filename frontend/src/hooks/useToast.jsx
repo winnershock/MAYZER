@@ -1,9 +1,3 @@
-/**
- * hooks/useToast.jsx
- * Responsabilidad : Proveedor y hook para notificaciones toast globales (Sonner).
- * Exporta         : ToastProvider, useToast
- * Usado en        : App.jsx (provider), cualquier componente que emita toasts
- */
 import { createContext, useContext, useCallback } from 'react';
 import { toast as sonnerToast } from 'sonner';
 

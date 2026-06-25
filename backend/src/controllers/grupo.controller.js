@@ -1,21 +1,13 @@
-/**
- * controllers/grupo.controller.js
- * Responsabilidad : Gestión de grupos de formación con filtrado por instructor.
- * Exporta         : listar, verUno, crear, actualizar, eliminar
- * Usado en        : routes/grupo.routes.js
- * Depende de      : config/db.js (pool, CAT), controllers/instructor.controller.js,
- *                   utils/response.utils.js, utils/db.utils.js, utils/crypto.utils.js
- */
 const { pool, CAT }            = require('../config/db');
 const { registrarAsignacion }  = require('./instructor.controller');
 const { notFoundSi, handleError } = require('../utils/response.utils');
 const { construirFiltroPeriodo, normalizarPaginacion } = require('../utils/db.utils');
 const { descifrar }               = require('../utils/crypto.utils');
 
-// ── GET /api/grupos ───────────────────────────────────────
 async function listar(req, res) {
   try {
-    const { estado, curso, curso_id, anio, instructor_id } = req.query;
+    const { estado: estadoParam, estado_grupo, curso, curso_id, anio, mes, instructor_id } = req.query;
+    const estado = estado_grupo || estadoParam;
     const params = [];
     let clausulaWhere = 'WHERE g.deleted_at IS NULL';
 
@@ -23,7 +15,6 @@ async function listar(req, res) {
       const estadoId = CAT.grpEstado[estado];
       if (estadoId) { clausulaWhere += ' AND g.estado_id = ?'; params.push(estadoId); }
     }
-    // curso_id tiene precedencia (filtro por desplegable); curso es fallback legacy por nombre
     if (curso_id) {
       clausulaWhere += ' AND g.curso_id = ?';
       params.push(Number(curso_id));
@@ -31,13 +22,16 @@ async function listar(req, res) {
       clausulaWhere += ' AND c.nombre LIKE ?';
       params.push(`%${curso}%`);
     }
-    if (instructor_id) {
+
+    if (req.usuario.rol_id === CAT.rol.INSTRUCTOR) {
+      clausulaWhere += ' AND ins.id = ?';
+      params.push(req.usuario.instructor_id);
+    } else if (instructor_id) {
       clausulaWhere += ' AND ins.id = ?';
       params.push(Number(instructor_id));
     }
 
-    // Rango de fechas → usa índice idx_grupo_fecha_inicio
-    const periodoAnio = construirFiltroPeriodo(anio, null, 'g.fecha_inicio');
+    const periodoAnio = construirFiltroPeriodo(anio, mes, 'g.fecha_inicio');
     if (periodoAnio.filtro) { clausulaWhere += ' ' + periodoAnio.filtro; params.push(...periodoAnio.params); }
 
     const { limit, offset, pagina } = normalizarPaginacion(req.query);
@@ -75,7 +69,6 @@ async function listar(req, res) {
   }
 }
 
-// ── GET /api/grupos/:id ───────────────────────────────────
 async function verUno(req, res) {
   try {
     const [filasGrupo] = await pool.execute(
@@ -94,6 +87,11 @@ async function verUno(req, res) {
       [req.params.id]
     );
     if (notFoundSi(res, filasGrupo)) return;
+
+    if (req.usuario.rol_id === CAT.rol.INSTRUCTOR &&
+        filasGrupo[0].instructor_id !== req.usuario.instructor_id) {
+      return res.status(403).json({ error: 'No tienes permiso para ver este grupo' });
+    }
 
     const [filasAspirantes] = await pool.execute(
       `SELECT a.id,
@@ -130,14 +128,6 @@ async function verUno(req, res) {
   }
 }
 
-
-/**
- * Valida que cupo_maximo no supere la capacidad del lugar.
- * @param {object} conn - Conexión MySQL
- * @param {number|null} lugar_id
- * @param {number} cupo_maximo
- * @returns {string|null} Mensaje de error o null si es válido
- */
 async function validarCapacidadLugar(conn, lugar_id, cupo_maximo) {
   if (!lugar_id) return null;
   const [[lugar]] = await conn.execute(
@@ -150,7 +140,6 @@ async function validarCapacidadLugar(conn, lugar_id, cupo_maximo) {
   return null;
 }
 
-// ── POST /api/grupos ──────────────────────────────────────
 async function crear(req, res) {
   const { nombre, codigo, curso_id, instructor_id, cupo_maximo = 30,
           fecha_inicio, fecha_fin, lugar_id, observaciones } = req.body;
@@ -163,14 +152,12 @@ async function crear(req, res) {
   try {
     await conn.beginTransaction();
 
-    // Validar capacidad del lugar
     const errorCapacidad = await validarCapacidadLugar(conn, lugar_id, cupo_maximo);
     if (errorCapacidad) {
       conn.release();
       return res.status(400).json({ error: errorCapacidad });
     }
 
-    // Si el frontend no envía codigo, calcular el siguiente disponible
     let codigoFinal = codigo ? Number(codigo) : null;
     if (!codigoFinal) {
       const [[{ maxCodigo }]] = await conn.execute(
@@ -197,7 +184,6 @@ async function crear(req, res) {
   } finally { conn.release(); }
 }
 
-// ── PUT /api/grupos/:id ───────────────────────────────────
 async function actualizar(req, res) {
   const { nombre, codigo, curso_id, instructor_id, cupo_maximo,
           fecha_inicio, fecha_fin, lugar_id, estado, observaciones } = req.body;
@@ -223,7 +209,6 @@ async function actualizar(req, res) {
   } finally { conn.release(); }
 }
 
-// ── DELETE /api/grupos/:id ────────────────────────────────
 async function eliminar(req, res) {
   try {
     const [[{ totalAspirantes }]] = await pool.execute(

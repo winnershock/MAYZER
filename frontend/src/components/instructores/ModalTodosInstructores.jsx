@@ -1,10 +1,3 @@
-/**
- * components/instructores/ModalTodosInstructores.jsx
- * Responsabilidad : Modal con la lista completa de instructores sin filtro de mes.
- * Exporta         : ModalTodosInstructores (default)
- * Usado en        : pages/admin/Instructores.jsx
- * Depende de      : components/instructores/BarraHoras.jsx, components/common/Icon.jsx
- */
 import s from '../../pages/admin/Instructores.module.css';
 import BarraHoras from './BarraHoras.jsx';
 import Icon from '../common/Icon.jsx';

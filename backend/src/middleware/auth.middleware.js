@@ -1,10 +1,3 @@
-/**
- * middleware/auth.middleware.js
- * Responsabilidad : Autenticación JWT y control de acceso por rol.
- * Exporta         : autenticar, soloAdmin, soloSuperUsuario
- * Usado en        : Todos los routers protegidos.
- * Depende de      : config/db.js (pool, CAT)
- */
 const jwt = require('jsonwebtoken');
 const { pool, CAT } = require('../config/db');
 
@@ -16,16 +9,22 @@ async function autenticar(req, res, next) {
     }
     const payload = jwt.verify(header.split(' ')[1], process.env.JWT_SECRET);
 
-    // ── Optimizado: si el JWT ya contiene id + rol_id + activo, no hace falta
-    //    consultar la BD en cada request (ahorramos 1 query por llamada API).
-    //    El accessToken caduca en 15 min; si el usuario se desactiva, la próxima
-    //    renovación de token fallará correctamente en refreshToken (que sí valida activo).
     if (payload.id && payload.rol_id && payload.activo === true) {
-      req.usuario = { id: payload.id, rol_id: payload.rol_id, activo: true };
+      // Tokens emitidos antes de este fix no traen instructor_id: se recupera
+      // de BD para no romper sesiones activas ni dejar el campo en `undefined`
+      // (mysql2 rechaza `undefined` como parámetro de un query preparado).
+      let instructorId = payload.instructor_id ?? null;
+      if (instructorId === null && payload.rol_id === CAT.rol.INSTRUCTOR) {
+        const [[ins]] = await pool.execute(
+          'SELECT id FROM instructor WHERE usuario_id = ? AND deleted_at IS NULL',
+          [payload.id]
+        );
+        instructorId = ins?.id ?? null;
+      }
+      req.usuario = { id: payload.id, rol_id: payload.rol_id, activo: true, instructor_id: instructorId };
       return next();
     }
 
-    // Fallback: token sin payload completo (tokens emitidos antes de la optimización)
     const [rows] = await pool.execute(
       'SELECT id, nombre_completo, rol_id, activo FROM usuario WHERE id = ?',
       [payload.id]
@@ -33,7 +32,15 @@ async function autenticar(req, res, next) {
     if (!rows.length || !rows[0].activo) {
       return res.status(401).json({ error: 'Usuario inactivo o no existe' });
     }
-    req.usuario = rows[0];
+    let instructorId = null;
+    if (rows[0].rol_id === CAT.rol.INSTRUCTOR) {
+      const [[ins]] = await pool.execute(
+        'SELECT id FROM instructor WHERE usuario_id = ? AND deleted_at IS NULL',
+        [rows[0].id]
+      );
+      instructorId = ins?.id ?? null;
+    }
+    req.usuario = { ...rows[0], instructor_id: instructorId };
     next();
   } catch (e) {
     if (e.name === 'TokenExpiredError') {

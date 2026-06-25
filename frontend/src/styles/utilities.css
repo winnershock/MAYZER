@@ -1,7 +1,2 @@
-/* ─────────────────────────────────────────────────────────
-   utilities.css — Clases de utilidad general: .divider, .text-muted.
-   Depende de: tokens.css
-───────────────────────────────────────────────────────── */
-
 .divider    { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
 .text-muted { color: var(--text-tertiary); }

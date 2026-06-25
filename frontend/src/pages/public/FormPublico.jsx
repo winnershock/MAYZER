@@ -1,9 +1,3 @@
-/**
- * pages/public/FormPublico.jsx
- * Responsabilidad : Formulario público para envío de solicitudes de formación TSA.
- * Exporta         : FormPublico (default)
- * Depende de      : services/publico.service.js, components/public/*
- */
 import './FormPublico.css';
 import { useState, useEffect } from 'react';
 import { PublicoService } from '../../services';
@@ -55,7 +49,6 @@ export default function FormPublico() {
     if (tipoEntidad !== 'persona') return;
     const a = aspirantes[0];
     const nombre = [a.nombre1, a.nombre2, a.apellido1, a.apellido2].filter(Boolean).join(' ');
-    // Solo auto-rellena si el campo está vacío; respeta ediciones manuales del usuario
     setEmpresa(prev => ({
       ...prev,
       nombre:   prev.nombre   || nombre              || '',
@@ -88,7 +81,6 @@ export default function FormPublico() {
   const setPdf    = (idx, file) => setPdfs(p => p.map((v, i) => i === idx ? file : v));
   const empCh     = (field, val) => {
     setEmpresa(prev => ({ ...prev, [field]: val }));
-    // Sincronizar cantidad de formularios cuando cambia "cupos"
     if (field === 'cupos' && tipoEntidad !== 'persona') {
       const n = Math.min(Math.max(parseInt(val, 10) || 1, 1), 50);
       setAspirantes(prev => {
@@ -198,9 +190,12 @@ export default function FormPublico() {
             <div className="fp-actions">
               <button type="button" className="fp-btn-primary" onClick={() => {
                 setError('');
+                const labelNit = tipoEntidad === 'persona' ? 'El número de documento'
+                  : tipoEntidad === 'grupo SENA' ? 'El número de ficha'
+                  : 'El NIT';
                 if (!empresa.nombre?.trim())          { setError('El nombre de la empresa/entidad es obligatorio'); return; }
                 if (!empresa.nombre_contacto?.trim()) { setError('El nombre del solicitante es obligatorio'); return; }
-                if (!empresa.nit?.trim())             { setError('El NIT / número de documento es obligatorio'); return; }
+                if (!empresa.nit?.trim())             { setError(`${labelNit} es obligatorio`); return; }
                 if (!empresa.email?.includes('@'))    { setError('El correo electrónico del solicitante es inválido'); return; }
                 if (!empresa.telefono?.trim())        { setError('El número de teléfono es obligatorio'); return; }
                 if (!empresa.ciudad_id)               { setError('La ciudad es obligatoria'); return; }
@@ -283,7 +278,6 @@ function FpTopbar() {
         </div>
       </div>
 
-      {/* Botón Certificado SENA con tooltip informativo */}
       <div className="fp-cert-wrap">
         <a
           href="https://certificados.sena.edu.co/default.asp#result"

@@ -1,11 +1,3 @@
-/**
- * components/aspirantes/ModalDetalle.jsx
- * Responsabilidad : Modal de solo lectura con toda la información de un aspirante.
- * Exporta         : ModalDetalle (default)
- * Usado en        : pages/admin/Aspirantes.jsx
- * Depende de      : services/index.js, components/common/EstadoBadge.jsx,
- *                   components/common/Icon.jsx, constants/index.js, utils/fecha.js
- */
 import { useState, useEffect } from 'react';
 import { AspiranteService } from '../../services';
 import { AspEstadoBadge } from '../common/EstadoBadge.jsx';

@@ -1,11 +1,3 @@
-/**
- * components/instructores/ModalHistorialInstructor.jsx
- * Responsabilidad : Modal de historial de asignaciones de grupos de un instructor.
- * Exporta         : ModalHistorialInstructor (default)
- * Usado en        : pages/admin/Instructores.jsx
- * Depende de      : components/common/EstadoBadge.jsx, components/common/Icon.jsx,
- *                   utils/fecha.js
- */
 import s from '../../pages/admin/Instructores.module.css';
 import { GrpEstadoBadge } from '../common/EstadoBadge.jsx';
 import Icon from '../common/Icon.jsx';

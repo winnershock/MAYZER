@@ -1,9 +1,3 @@
-/**
- * hooks/usePaginatedFetch.js
- * Responsabilidad : Hook genérico para listas paginadas con debounce automático.
- * Exporta         : usePaginatedFetch
- * Usado en        : pages/admin/Aspirantes.jsx, pages/admin/Solicitudes.jsx
- */
 import { useState, useEffect, useCallback, useRef } from 'react';
 
 const DEFAULT_LIMITE     = 25;
@@ -20,11 +14,9 @@ export function usePaginatedFetch(
   const [pagina,   setPagina]   = useState(1);
   const [cargando, setCargando] = useState(true);
 
-  // Serialización estable de filtros para usarla como dependencia
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const filtrosKey = JSON.stringify(filtros);
 
-  // Reset de página cuando cambian los filtros
   useEffect(() => {
     setPagina(1);
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -36,7 +28,6 @@ export function usePaginatedFetch(
   const cargar = useCallback(async () => {
     setCargando(true);
     try {
-      // Construir params limpiando claves vacías
       const params = { limit: limite, page: pagina };
       const filtrosActivos = JSON.parse(filtrosKey);
       Object.entries(filtrosActivos).forEach(([k, v]) => {
@@ -49,13 +40,11 @@ export function usePaginatedFetch(
         setItems(data);
         setTotal(data.length);
       } else {
-        // Detectar la clave del array en la respuesta paginada
         const arrayKey = Object.keys(data).find(k => Array.isArray(data[k]));
         setItems(arrayKey ? data[arrayKey] : []);
         setTotal(data.total ?? 0);
       }
     } catch {
-      // El caller decide si muestra toast; el hook solo limpia el estado
       setItems([]);
       setTotal(0);
     } finally {

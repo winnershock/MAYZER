@@ -1,13 +1,3 @@
-/**
- * constants/index.js
- * Responsabilidad : Constantes globales del frontend — listas de opciones y configuración.
- * Exporta         : TIPOS_DOC, NIVELES_ACADEMICOS, SECTORES, TIPOS_SANGRE,
- *                   TIPO_ENTIDAD_INFO, ROLES, ANIOS_FILTRO, API_BASE
- * Usado en        : pages/public/FormPublico.jsx, pages/admin/Aspirantes.jsx,
- *                   components/public/AspCard.jsx, components/public/SeccionTipo.jsx,
- *                   App.jsx y otros.
- * Depende de      : utils/fecha.js (generarRangoAnios)
- */
 import { generarRangoAnios } from '../utils/fecha.js';
 
 export const TIPOS_DOC = ['CC', 'CE', 'PA', 'TI', 'NIT', 'OTRO'];
@@ -29,11 +19,8 @@ export const MESES = [
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
 ];
 
-// Genera dinámicamente: año actual + 2 años anteriores + 1 año siguiente.
-// Se actualiza solo sin necesidad de modificar este archivo manualmente.
 export const ANIOS_FILTRO = generarRangoAnios(2, 1);
 
-// Opciones de estado para <select> — sin emojis para coherencia visual
 export const ASP_ESTADOS_SELECT = [
   { val: 'PENDIENTE',    label: 'Pendiente'    },
   { val: 'PRE_APROBADO', label: 'Pre-aprobado' },
@@ -68,18 +55,14 @@ export const TIPO_ENTIDAD_INFO = {
   persona:     { label: 'Persona independiente', desc: 'Individuo sin vínculo empresarial. Se registrará simultáneamente como empresa y aspirante.' },
 };
 
-// IDs de roles — deben coincidir con CAT.rol del backend (config/db.js)
 export const ROL = {
   ADMIN:        1,
   INSTRUCTOR:   2,
   SUPERUSUARIO: 3,
 };
 
-// URL base de la API — usada para enlaces a archivos estáticos (documentos, etc.)
 export const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
-// Paletas de color para el calendario — compartidas por Calendario.jsx
-// y cualquier otro módulo que necesite colorear eventos por grupo/instructor
 export const CALENDAR_PALETTE_DARK = [
   '#FF6719', '#e05500', '#2563eb', '#9333ea',
   '#059669', '#dc2626', '#d97706', '#0891b2',

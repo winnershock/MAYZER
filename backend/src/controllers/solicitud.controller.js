@@ -1,25 +1,14 @@
-/**
- * controllers/solicitud.controller.js
- * Responsabilidad : Listado, detalle y cambio de estado de solicitudes de formación.
- * Exporta         : listar, verUno, actualizarEstado
- * Usado en        : routes/solicitud.routes.js
- * Depende de      : config/db.js (pool, CAT), utils/response.utils.js, utils/db.utils.js
- */
-const { pool, CAT }        = require('../config/db');
+const { pool }             = require('../config/db');
 const { notFoundSi, handleError } = require('../utils/response.utils');
 const { construirFiltroPeriodo, normalizarPaginacion } = require('../utils/db.utils');
 
-// Alias local para legibilidad — fuente única: CAT.solEstado en config/db.js
-const ID_ESTADO_SOLICITUD = CAT.solEstado;
-
-// ── GET /api/solicitudes ──────────────────────────────────
 async function listar(req, res) {
   try {
-    const { estado, empresa, anio, mes } = req.query;
+    const { estado: estadoParam, estado_solicitud, empresa, nombre, nit, anio, mes } = req.query;
+    const estado = estado_solicitud || estadoParam;
     const params = [];
     let clausulaWhere = 'WHERE s.deleted_at IS NULL';
 
-    // El estado se filtra con HAVING sobre el estado calculado dinámicamente
     const filtroEstado = estado ? estado.toUpperCase() : null;
     const havingClause = filtroEstado
       ? `HAVING CASE
@@ -30,11 +19,18 @@ async function listar(req, res) {
            ELSE 'EN_REVISION'
          END = ?`
       : '';
-    if (empresa) {
+    if (nombre) {
+      clausulaWhere += ' AND e.nombre LIKE ?';
+      params.push(`%${nombre}%`);
+    }
+    if (nit) {
+      clausulaWhere += ' AND e.nit LIKE ?';
+      params.push(`%${nit}%`);
+    }
+    if (!nombre && !nit && empresa) {
       clausulaWhere += ' AND (e.nombre LIKE ? OR e.nit LIKE ?)';
       params.push(`%${empresa}%`, `%${empresa}%`);
     }
-    // ✅ Rango de fechas → usa índice idx_solicitud_created
     const periodo = construirFiltroPeriodo(anio, mes, 's.created_at');
     if (periodo.filtro) { clausulaWhere += ' ' + periodo.filtro; params.push(...periodo.params); }
 
@@ -75,7 +71,6 @@ async function listar(req, res) {
   }
 }
 
-// ── GET /api/solicitudes/:id ──────────────────────────────
 async function verUno(req, res) {
   try {
     const [filasSolicitud] = await pool.execute(
@@ -115,21 +110,4 @@ async function verUno(req, res) {
   }
 }
 
-// ── PATCH /api/solicitudes/:id/estado ────────────────────
-async function actualizarEstado(req, res) {
-  const { estado, motivo_rechazo } = req.body;
-  const estadoId = ID_ESTADO_SOLICITUD[estado];
-  if (!estadoId) return res.status(400).json({ error: 'Estado inválido' });
-
-  try {
-    await pool.execute(
-      'UPDATE solicitud SET estado_id = ?, motivo_rechazo = ?, revisado_por = ?, revisado_en = NOW() WHERE id = ?',
-      [estadoId, motivo_rechazo || null, req.usuario.id, req.params.id]
-    );
-    res.json({ mensaje: 'Estado actualizado' });
-  } catch (e) {
-    handleError(res, e, 'actualizarEstado solicitud', 'Error al actualizar estado');
-  }
-}
-
-module.exports = { listar, verUno, actualizarEstado };
+module.exports = { listar, verUno };

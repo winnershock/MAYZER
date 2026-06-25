@@ -1,4 +1,3 @@
-/* ModalSolicitud.module.css – Inline styles migrados */
 .datos-grid      { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
 .dato-cell       { padding: 8px 12px; background: var(--bg); border-radius: var(--r-sm); font-size: 13px; }
 .dato-label      { font-weight: 700; color: var(--text-tertiary); margin-right: 8px; }

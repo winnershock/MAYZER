@@ -1,9 +1,3 @@
-/**
- * components/public/PantallaExito.jsx
- * Responsabilidad : Pantalla de confirmación tras el envío exitoso del formulario público.
- * Exporta         : PantallaExito (default)
- * Usado en        : pages/public/FormPublico.jsx
- */
 export default function PantallaExito({ onReset }) {
   return (
     <div className="fp-success">

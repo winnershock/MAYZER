@@ -1,19 +1,9 @@
-/**
- * controllers/public.controller.js
- * Responsabilidad : Endpoints públicos sin autenticación para el formulario externo.
- * Exporta         : listarCursos, listarCiudades, crearSolicitud
- * Usado en        : routes/public.routes.js
- * Depende de      : config/db.js (pool, CAT), utils/crypto.utils.js, utils/upload.utils.js
- */
 const fs   = require('fs');
 const { pool, CAT } = require('../config/db');
-const { cifrar }    = require('../utils/crypto.utils');
+const { cifrar, hashBusqueda } = require('../utils/crypto.utils');
 const { handleError } = require('../utils/response.utils');
+const { MAX_ASPIRANTES, validarEmpresa, validarAspirante } = require('../utils/validacion.reglas');
 
-const TIPOS_ENTIDAD_VALIDOS = ['empresa', 'grupo SENA', 'persona'];
-const MAX_ASPIRANTES        = 50;
-
-// ── GET /api/public/cursos ────────────────────────────────
 async function listarCursos(req, res) {
   try {
     const [filas] = await pool.execute(
@@ -26,7 +16,6 @@ async function listarCursos(req, res) {
   }
 }
 
-// ── GET /api/public/ciudades ──────────────────────────────
 async function listarCiudades(req, res) {
   try {
     const [filas] = await pool.execute('SELECT id, nombre, departamento FROM ciudad ORDER BY nombre');
@@ -36,39 +25,6 @@ async function listarCiudades(req, res) {
   }
 }
 
-
-// ── Validaciones de la solicitud pública ──────────────────
-
-/** Valida los campos del bloque empresa/entidad. */
-function validarEmpresa(empresa, tipo_entidad, aspirantes) {
-  if (!TIPOS_ENTIDAD_VALIDOS.includes(tipo_entidad)) return 'Tipo de registro inválido';
-  if (tipo_entidad === 'persona' && aspirantes?.length !== 1) return 'Registro persona: solo 1 aspirante';
-  if (!empresa?.nombre?.trim())              return 'El nombre es obligatorio';
-  if (!empresa?.nombre_contacto?.trim())     return 'El nombre del solicitante es obligatorio';
-  if (!empresa?.nit?.trim())                 return 'El NIT/cédula es obligatorio';
-  if (!empresa?.email?.includes('@'))        return 'El correo es inválido';
-  if (!empresa?.telefono?.trim())            return 'El teléfono es obligatorio';
-  if (!empresa?.ciudad_id)                   return 'La ciudad es obligatoria';
-  return null;
-}
-
-/** Valida un aspirante individual y la presencia de su PDF. */
-function validarAspirante(aspirante, indice, pdfMap) {
-  const n = indice + 1;
-  if (!aspirante.nombre1?.trim())            return `Aspirante ${n}: primer nombre obligatorio`;
-  if (!aspirante.apellido1?.trim())          return `Aspirante ${n}: primer apellido obligatorio`;
-  if (!aspirante.numero_documento?.trim())   return `Aspirante ${n}: documento obligatorio`;
-  if (!aspirante.email?.includes('@'))       return `Aspirante ${n}: correo inválido`;
-  if (!aspirante.telefono?.trim())           return `Aspirante ${n}: teléfono obligatorio`;
-  if (!aspirante.fecha_nacimiento)           return `Aspirante ${n}: fecha de nacimiento obligatoria`;
-  if (!pdfMap[String(indice)])               return `Aspirante ${n}: el documento PDF es obligatorio`;
-  if (!aspirante.contacto?.nombre?.trim())   return `Aspirante ${n}: contacto de emergencia obligatorio`;
-  if (!aspirante.contacto?.telefono?.trim()) return `Aspirante ${n}: teléfono de emergencia obligatorio`;
-  if (!aspirante.laboral?.nivel_academico)   return `Aspirante ${n}: nivel académico obligatorio`;
-  return null;
-}
-
-/** Inserta un aspirante y sus secciones médica, contacto y laboral en la BD. */
 async function insertarAspirante(conn, aspirante, indice, pdfMap, solicitudId, empresaId) {
   const archivoPdf     = pdfMap[String(indice)];
   const nombreCompleto = [
@@ -79,8 +35,8 @@ async function insertarAspirante(conn, aspirante, indice, pdfMap, solicitudId, e
   const [resultadoAsp] = await conn.execute(
     `INSERT INTO aspirante
        (solicitud_id, nombre1, nombre2, apellido1, apellido2, nombre_completo,
-        tipo_documento, numero_documento, email, telefono, fecha_nacimiento, estado_id, documento_pdf)
-     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+        tipo_documento, numero_documento, numero_documento_hash, email, telefono, fecha_nacimiento, estado_id, documento_pdf)
+     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
     [
       solicitudId,
       aspirante.nombre1.trim(), aspirante.nombre2?.trim() || '',
@@ -88,6 +44,7 @@ async function insertarAspirante(conn, aspirante, indice, pdfMap, solicitudId, e
       nombreCompleto,
       aspirante.tipo_documento || 'CC',
       cifrar(aspirante.numero_documento.trim()),
+      hashBusqueda(aspirante.numero_documento.trim()),
       cifrar(aspirante.email.trim()),
       cifrar(aspirante.telefono.trim()),
       aspirante.fecha_nacimiento,
@@ -97,7 +54,6 @@ async function insertarAspirante(conn, aspirante, indice, pdfMap, solicitudId, e
   );
   const aspiranteId = resultadoAsp.insertId;
 
-  // Sección médica
   const med = aspirante.medico || {};
   await conn.execute(
     `INSERT INTO aspirante_medico (aspirante_id, tipo_sangre, eps, arl, antecedentes, medicamentos)
@@ -112,7 +68,6 @@ async function insertarAspirante(conn, aspirante, indice, pdfMap, solicitudId, e
     ]
   );
 
-  // Contacto de emergencia
   const contacto = aspirante.contacto || {};
   if (contacto.nombre?.trim()) {
     await conn.execute(
@@ -129,7 +84,6 @@ async function insertarAspirante(conn, aspirante, indice, pdfMap, solicitudId, e
     );
   }
 
-  // Información laboral
   const laboral = aspirante.laboral || {};
   if (laboral.nivel_academico) {
     await conn.execute(
@@ -148,7 +102,6 @@ async function insertarAspirante(conn, aspirante, indice, pdfMap, solicitudId, e
   }
 }
 
-// ── POST /api/public/solicitud ────────────────────────────
 async function crearSolicitud(req, res) {
   let parsed;
   try { parsed = JSON.parse(req.body.data || '{}'); }
@@ -156,21 +109,18 @@ async function crearSolicitud(req, res) {
 
   const { empresa, curso_id, aspirantes, tipo_entidad = 'empresa' } = parsed;
 
-  // Validar empresa y aspirantes
   const errorEmpresa = validarEmpresa(empresa, tipo_entidad, aspirantes);
   if (errorEmpresa) return res.status(400).json({ error: errorEmpresa });
   if (!curso_id)             return res.status(400).json({ error: 'Selecciona el curso' });
   if (!aspirantes?.length)   return res.status(400).json({ error: 'Debe incluir al menos un aspirante' });
   if (aspirantes.length > MAX_ASPIRANTES) return res.status(400).json({ error: `Máximo ${MAX_ASPIRANTES} aspirantes` });
 
-  // Indexar archivos PDF por índice de aspirante
   const pdfMap = {};
   for (const archivo of (req.files || [])) {
     const coincidencia = archivo.fieldname.match(/^pdf_(\d+)$/);
     if (coincidencia) pdfMap[coincidencia[1]] = archivo;
   }
 
-  // Validar cada aspirante
   for (let i = 0; i < aspirantes.length; i++) {
     const error = validarAspirante(aspirantes[i], i, pdfMap);
     if (error) return res.status(400).json({ error });
@@ -180,7 +130,6 @@ async function crearSolicitud(req, res) {
   try {
     await conn.beginTransaction();
 
-    // 1. Upsert empresa
     let empresaId;
     const [filasEmpresa] = await conn.execute('SELECT id FROM empresa WHERE nit = ?', [empresa.nit.trim()]);
     if (filasEmpresa.length) {
@@ -210,14 +159,12 @@ async function crearSolicitud(req, res) {
       empresaId = resultado.insertId;
     }
 
-    // 2. Crear solicitud
     const [resultadoSolicitud] = await conn.execute(
       'INSERT INTO solicitud (empresa_id, curso_id, num_aspirantes, estado_id) VALUES (?,?,?,?)',
       [empresaId, Number(curso_id), aspirantes.length, CAT.solEstado.PENDIENTE]
     );
     const solicitudId = resultadoSolicitud.insertId;
 
-    // 3. Insertar aspirantes con sus secciones
     for (let i = 0; i < aspirantes.length; i++) {
       await insertarAspirante(conn, aspirantes[i], i, pdfMap, solicitudId, empresaId);
     }

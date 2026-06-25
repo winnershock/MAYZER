@@ -1,10 +1,3 @@
-/**
- * components/grupos/ModalEventoCalendario.jsx
- * Responsabilidad : Modal de creación y edición de eventos del calendario para un grupo.
- * Exporta         : ModalEventoCalendario (default)
- * Usado en        : pages/admin/Calendario.jsx
- * Depende de      : services/index.js, hooks/useToast.jsx, components/common/Icon.jsx
- */
 import { useState, useEffect } from 'react';
 import { EventoService } from '../../services';
 import { useToast } from '../../hooks/useToast.jsx';
@@ -22,7 +15,7 @@ export default function ModalEventoCalendario({
   onClose, onDone,
   fechaInicio = '',
   fechaFin    = '',
-  fechasDiscontinuas = null, // array de strings YYYY-MM-DD si es modo discontinuo
+  fechasDiscontinuas = null,
 }) {
   const esEdicion     = !!evento?.id;
   const esDiscontinuo = !esEdicion && Array.isArray(fechasDiscontinuas) && fechasDiscontinuas.length > 1;
@@ -67,7 +60,6 @@ export default function ModalEventoCalendario({
     setCargando(true);
     try {
       if (esDiscontinuo) {
-        // Crear un evento independiente por cada día discontinuo seleccionado
         for (const fecha of fechasDiscontinuas) {
           await EventoService.crear({
             grupo_id:     form.grupo_id,
@@ -116,7 +108,6 @@ export default function ModalEventoCalendario({
           {esEdicion ? 'Editar clase' : 'Programar nueva clase'}
         </div>
 
-        {/* Indicador de selección */}
         {!esEdicion && (esDiscontinuo ? (
           <div className={s['indicator-brand']}>
             <Icon name="calendar" size={16} />
@@ -163,7 +154,6 @@ export default function ModalEventoCalendario({
             />
           </div>
 
-          {/* En modo discontinuo solo se muestra hora (las fechas ya están fijadas) */}
           {!esDiscontinuo && <>
             <div className="form-group">
               <label>Fecha de inicio <span className="required">*</span></label>

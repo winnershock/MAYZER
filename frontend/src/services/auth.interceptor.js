@@ -1,9 +1,3 @@
-/**
- * services/auth.interceptor.js
- * Responsabilidad : Interceptores Axios — adjunta token Bearer y maneja refresh silencioso.
- * Exporta         : applyAuthInterceptors
- * Usado en        : services/api.js
- */
 import axios from 'axios';
 
 let refreshando = false;
@@ -12,15 +6,6 @@ let colaEspera  = [];
 function resolverCola(token, error) {
   colaEspera.forEach(cb => (error ? cb.reject(error) : cb.resolve(token)));
   colaEspera = [];
-}
-
-function redirigirLogin() {
-  localStorage.removeItem('accessToken');
-  localStorage.removeItem('usuario');
-  // Evitar loop si ya estamos en /login
-  if (!window.location.pathname.includes('/login')) {
-    window.location.replace('/login');
-  }
 }
 
 const RUTAS_AUTH = new Set(['/auth/login', '/auth/logout', '/auth/refresh']);
@@ -32,10 +17,9 @@ function esRutaAuth(url = '') {
 let aplicado = false;
 
 export function applyAuthInterceptors(apiInstance) {
-  if (aplicado) return; // evita doble registro en StrictMode
+  if (aplicado) return;
   aplicado = true;
 
-  // ── Request: adjuntar Bearer token ──────────────────────────────────────
   apiInstance.interceptors.request.use(
     (config) => {
       const token = localStorage.getItem('accessToken');
@@ -48,7 +32,6 @@ export function applyAuthInterceptors(apiInstance) {
     (error) => Promise.reject(error)
   );
 
-  // ── Response: manejo centralizado de 401 ────────────────────────────────
   apiInstance.interceptors.response.use(
     (res) => res,
     async (error) => {
@@ -57,14 +40,11 @@ export function applyAuthInterceptors(apiInstance) {
 
       const url    = original.url ?? '';
       const status = error.response?.status;
+      const code   = error.response?.data?.code;
 
-      // No interceptar rutas de auth para evitar loops
       if (esRutaAuth(url)) return Promise.reject(error);
 
-      // ── Cualquier 401 → intentar refresh silencioso ──────────────────
-      if (status === 401 && !original._retry) {
-
-        // Si ya hay un refresh en curso, encolar y esperar
+      if (status === 401 && code === 'TOKEN_EXPIRED' && !original._retry) {
         if (refreshando) {
           return new Promise((resolve, reject) => {
             colaEspera.push({ resolve, reject });
@@ -72,9 +52,6 @@ export function applyAuthInterceptors(apiInstance) {
             original.headers ??= {};
             original.headers.Authorization = `Bearer ${token}`;
             return apiInstance(original);
-          }).catch(() => {
-            redirigirLogin();
-            return Promise.reject(error);
           });
         }
 
@@ -94,15 +71,19 @@ export function applyAuthInterceptors(apiInstance) {
           original.headers ??= {};
           original.headers.Authorization = `Bearer ${data.accessToken}`;
           return apiInstance(original);
-
-        } catch {
-          // Refresh falló → cookie expirada o revocada → logout forzado
-          resolverCola(null, new Error('Sesión expirada'));
-          redirigirLogin();
-          return Promise.reject(error);
+        } catch (refreshError) {
+          resolverCola(null, refreshError);
+          localStorage.clear();
+          window.location.href = '/login';
+          return Promise.reject(refreshError);
         } finally {
           refreshando = false;
         }
+      }
+
+      if (status === 401 && !original._retry && !localStorage.getItem('accessToken')) {
+        localStorage.clear();
+        window.location.href = '/login';
       }
 
       if (import.meta.env?.DEV && status === 401) {

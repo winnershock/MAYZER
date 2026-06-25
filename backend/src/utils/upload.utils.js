@@ -1,9 +1,3 @@
-/**
- * utils/upload.utils.js
- * Responsabilidad : Configuración de Multer para subida de archivos PDF.
- * Exporta         : upload (instancia Multer)
- * Usado en        : routes/public.routes.js
- */
 const multer = require('multer');
 const path   = require('path');
 const fs     = require('fs');
@@ -28,7 +22,7 @@ const fileFilter = (_req, file, cb) => {
 const upload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+  limits: { fileSize: 10 * 1024 * 1024 },
 });
 
 module.exports = { upload };

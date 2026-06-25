@@ -1,10 +1,3 @@
-/**
- * components/aspirantes/AccionesAspirante.jsx
- * Responsabilidad : Barra de acciones contextuales para un aspirante según su estado.
- * Exporta         : AccionesAspirante (default)
- * Usado en        : pages/admin/Aspirantes.jsx
- * Depende de      : components/common/Icon.jsx
- */
 import { memo } from 'react';
 import styles from './AccionesAspirante.module.css';
 import Icon from '../common/Icon.jsx';

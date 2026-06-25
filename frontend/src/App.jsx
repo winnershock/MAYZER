@@ -1,10 +1,3 @@
-/**
- * App.jsx  — Raíz de la aplicación React
- * Responsabilidad : Configura el árbol de providers, rutas y lazy loading de páginas.
- * Exporta         : App (default)
- * Depende de      : hooks/useAuth.jsx, hooks/useToast.jsx, components/layout/Layout.jsx,
- *                   components/splash/SplashScreen.jsx
- */
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 import { AuthProvider, useAuth } from './hooks/useAuth.jsx';
@@ -12,12 +5,10 @@ import { ToastProvider }         from './hooks/useToast.jsx';
 import { Toaster }               from 'sonner';
 import { ROL }                   from './constants/index.js';
 
-// ── Páginas de carga inmediata (ruta inicial / no autenticado) ────────────────
 import Layout      from './components/layout/Layout.jsx';
 import LoginPage   from './pages/auth/Login.jsx';
 import FormPublico from './pages/public/FormPublico.jsx';
 
-// ── Páginas lazy — se cargan solo cuando el usuario navega ───────────────────
 const SplashScreen    = lazy(() => import('./components/splash/SplashScreen.jsx'));
 const Inicio          = lazy(() => import('./pages/admin/Inicio.jsx'));
 const Solicitudes     = lazy(() => import('./pages/admin/Solicitudes.jsx'));
@@ -30,8 +21,6 @@ const Reportes        = lazy(() => import('./pages/admin/Reportes.jsx'));
 const Empresas        = lazy(() => import('./pages/admin/Empresas.jsx'));
 const Administradores = lazy(() => import('./pages/admin/Administradores.jsx'));
 
-
-// ── Spinner reutilizable para Suspense ────────────────────────────────────────
 function PageSpinner() {
   return (
     <div className="loading-wrap">
@@ -40,7 +29,6 @@ function PageSpinner() {
   );
 }
 
-// ── Rutas protegidas ─────────────────────────────────────────
 function RutaProtegida({ children, rolesPermitidos }) {
   const { usuario, cargando } = useAuth();
 
@@ -61,7 +49,6 @@ function RutaProtegida({ children, rolesPermitidos }) {
   return children;
 }
 
-// ── Splash controlado por estado de auth ─────────────────────
 function SplashWrapper() {
   const { recienLogueado, marcarSplashMostrado } = useAuth();
   const yaFueMostrado = sessionStorage.getItem('splash_shown') === '1';
@@ -73,18 +60,15 @@ function SplashWrapper() {
   );
 }
 
-// ── Árbol de rutas ────────────────────────────────────────────
 function AppRoutes() {
   return (
     <>
       <SplashWrapper />
       <Suspense fallback={<PageSpinner />}>
         <Routes>
-          {/* Rutas públicas */}
           <Route path="/solicitud" element={<FormPublico />} />
           <Route path="/login"     element={<LoginPage />} />
 
-          {/* Panel protegido */}
           <Route path="/" element={<RutaProtegida><Layout /></RutaProtegida>}>
             <Route index element={<Navigate to="/inicio" replace />} />
             <Route path="inicio" element={<Inicio />} />

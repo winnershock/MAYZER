@@ -1,10 +1,3 @@
-/**
- * services/instructor.service.js
- * Responsabilidad : Llamadas HTTP para gestión de instructores.
- * Exporta         : InstructorService (default)
- * Usado en        : pages/admin/Instructores.jsx, components/instructores/*
- * Depende de      : services/api.js
- */
 import api from './api';
 
 const InstructorService = {

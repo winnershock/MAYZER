@@ -1,10 +1,3 @@
-/**
- * components/grupos/ModalDetalleGrupo.jsx
- * Responsabilidad : Modal de solo lectura con datos y aspirantes inscritos de un grupo.
- * Exporta         : ModalDetalleGrupo (default)
- * Usado en        : pages/admin/Grupos.jsx
- * Depende de      : services/index.js, utils/fecha.js
- */
 import { useState, useEffect } from 'react';
 import s from './ModalDetalleGrupo.module.css';
 import { GrupoService } from '../../services';

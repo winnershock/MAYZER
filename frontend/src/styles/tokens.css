@@ -1,9 +1,3 @@
-/* ─────────────────────────────────────────────────────────
-   tokens.css — Design Tokens
-   Variables globales: colores, sombras, radios, tipografía,
-   animaciones y dimensiones del sistema de diseño Mayzer.
-───────────────────────────────────────────────────────── */
-
 :root {
   --brand:        #FF6719;
   --brand-hover:  #f05d12;

@@ -1,13 +1,5 @@
-/**
- * pages/admin/Grupos.jsx
- * Responsabilidad : Listado paginado de grupos con filtros y modales de gestión.
- * Exporta         : Grupos (default)
- * Depende de      : hooks/useGrupos.jsx, services/index.js,
- *                   components/grupos/*, components/common/*,
- *                   utils/informeGrupo.js
- */
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { CursoService, InstructorService, EmpresaService, GrupoService } from '../../services';
+import { CursoService, InstructorService, EmpresaService, GrupoService, ReporteService } from '../../services';
 import { useToast } from '../../hooks/useToast.jsx';
 import { useAuth }  from '../../hooks/useAuth.jsx';
 import { useGrupos } from '../../hooks/useGrupos.jsx';
@@ -19,17 +11,21 @@ import ModalDetalleGrupo from '../../components/grupos/ModalDetalleGrupo.jsx';
 import ModalAdministrar  from '../../components/grupos/ModalAdministrar.jsx';
 import ConfirmDialog     from '../../components/common/ConfirmDialog.jsx';
 import Paginador         from '../../components/common/Paginador.jsx';
+import FiltrosBar        from '../../components/common/FiltrosBar.jsx';
 import { GrpEstadoBadge } from '../../components/common/EstadoBadge.jsx';
-import { GRP_ESTADOS_SELECT, ANIOS_FILTRO } from '../../constants/index.js';
 import Icon from '../../components/common/Icon.jsx';
 
+const CAMPOS_FILTRO = ['estadoGrupo', 'curso', 'anio', 'mes'];
+const FILTROS_INICIAL = { estado_grupo: '', anio: '', mes: '', curso_id: '' };
+
 export default function Grupos() {
-  const [filtros,      setFiltros]      = useState({ estado: '', anio: '', curso_id: '' });
+  const [filtros,      setFiltros]      = useState(FILTROS_INICIAL);
   const [modal,        setModal]        = useState(null);
   const [cursos,       setCursos]       = useState([]);
   const [instructores, setInst]         = useState([]);
   const [lugares,      setLugares]      = useState([]);
   const [confirmState, setConfirmState] = useState(null);
+  const [descargandoZip, setDescargandoZip] = useState(false);
 
   const { esAdmin, cargando: authCargando } = useAuth();
   const toast       = useToast();
@@ -43,10 +39,12 @@ export default function Grupos() {
   }, [error]);
 
   useEffect(() => {
-    if (authCargando || !esAdmin) return;
+    if (authCargando) return;
     CursoService.listar().then(r => setCursos(r.data)).catch(() => {});
-    InstructorService.listar().then(r => setInst(r.data)).catch(() => {});
-    EmpresaService.listarLugares().then(r => setLugares(r.data)).catch(() => {});
+    if (esAdmin) {
+      InstructorService.listar().then(r => setInst(r.data)).catch(() => {});
+      EmpresaService.listarLugares().then(r => setLugares(r.data)).catch(() => {});
+    }
   }, [authCargando, esAdmin]);
 
   function eliminar(id) {
@@ -69,9 +67,20 @@ export default function Grupos() {
   const enCurso = grupos.filter(g => g.estado === 'EN_CURSO').length;
   const cerrarYRecargar = () => { setModal(null); recargar(); };
 
-  // Helpers estables para filtros — evitan recrear funciones en cada render
+  async function descargarZipDelGrupo(g) {
+    setDescargandoZip(g.id);
+    try {
+      await ReporteService.descargarZipGrupo(g.id, g.nombre);
+      toast('ZIP generado correctamente', 'sena');
+    } catch (e) {
+      toast(e.response?.data?.error || 'Error al generar el ZIP', 'danger');
+    } finally {
+      setDescargandoZip(false);
+    }
+  }
+
   const f = useCallback((k, v) => setFiltros(p => ({ ...p, [k]: v })), []);
-  const limpiarFiltros = useCallback(() => setFiltros({ estado: '', anio: '', curso_id: '' }), []);
+  const limpiarFiltros = useCallback(() => setFiltros(FILTROS_INICIAL), []);
 
   return (
     <div>
@@ -89,48 +98,19 @@ export default function Grupos() {
         )}
       </div>
 
-      {/* Filtros */}
-      <div className="filters-bar">
-        <div className="filter-group">
-          <label>Estado</label>
-          <select className="filter-input" value={filtros.estado}
-            onChange={e => f('estado', e.target.value)}>
-            <option value="">Todos los estados</option>
-            {GRP_ESTADOS_SELECT.map(o => <option key={o.val} value={o.val}>{o.label}</option>)}
-          </select>
-        </div>
-        <div className="filter-group">
-          <label>Curso</label>
-          <select
-            className="filter-input"
-            value={filtros.curso_id}
-            onChange={e => f('curso_id', e.target.value)}
-          >
-            <option value="">Todos los cursos</option>
-            {cursos.map(c => (
-              <option key={c.id} value={c.id}>{c.nombre}</option>
-            ))}
-          </select>
-        </div>
-        <div className="filter-group">
-          <label>Año</label>
-          <select className="filter-input" value={filtros.anio}
-            onChange={e => f('anio', e.target.value)}>
-            <option value="">Todos los años</option>
-            {ANIOS_FILTRO.map(a => <option key={a} value={a}>{a}</option>)}
-          </select>
-        </div>
-        <div className="filters-end">
-          <button className="btn btn-outline btn-sm" onClick={limpiarFiltros}>
-            Limpiar
-          </button>
+      <FiltrosBar
+        campos={CAMPOS_FILTRO}
+        valores={filtros}
+        onChange={f}
+        onLimpiar={limpiarFiltros}
+        cursos={cursos}
+        extra={
           <button className="btn btn-outline btn-sm" onClick={() => recargar()}>
             <Icon name="refresh" size={13} /> Actualizar
           </button>
-        </div>
-      </div>
+        }
+      />
 
-      {/* Tabla */}
       {cargando ? (
         <div className="loading-wrap"><div className="spinner" /></div>
       ) : grupos.length === 0 ? (
@@ -189,6 +169,23 @@ export default function Grupos() {
                         <Icon name="eye" size={11} /> Ver
                       </button>
 
+                      <button
+                        title="Descargar informe Excel del grupo"
+                        className={`${s.btnAccion} ${s.btnExcel}`}
+                        onClick={() => descargarInformeGrupo(g, toast, GrupoService)}
+                      >
+                        <Icon name="download" size={11} /> Excel
+                      </button>
+
+                      <button
+                        title="Descargar ZIP con expedientes del grupo"
+                        className={`${s.btnAccion} ${s.btnExcel}`}
+                        disabled={descargandoZip === g.id}
+                        onClick={() => descargarZipDelGrupo(g)}
+                      >
+                        <Icon name="download" size={11} /> {descargandoZip === g.id ? '...' : 'ZIP'}
+                      </button>
+
                       {esAdmin && (
                         <>
                           <button
@@ -197,14 +194,6 @@ export default function Grupos() {
                             onClick={() => setModal({ tipo: 'administrar', id: g.id })}
                           >
                             <Icon name="settings" size={11} /> Gestionar
-                          </button>
-
-                          <button
-                            title="Descargar informe Excel"
-                            className={`${s.btnAccion} ${s.btnExcel}`}
-                            onClick={() => descargarInformeGrupo(g, toast, GrupoService)}
-                          >
-                            <Icon name="download" size={11} /> Excel
                           </button>
 
                           <button
@@ -240,7 +229,6 @@ export default function Grupos() {
         </div>
       )}
 
-      {/* Modales */}
       {modal?.tipo === 'detalle'     && <ModalDetalleGrupo grupoId={modal.id} onClose={() => setModal(null)} />}
       {modal?.tipo === 'administrar' && <ModalAdministrar  grupoId={modal.id} onClose={cerrarYRecargar} />}
       {modal?.tipo === 'crear'       && <ModalGrupo onClose={cerrarYRecargar} cursos={cursos} instructores={instructores} lugares={lugares} />}

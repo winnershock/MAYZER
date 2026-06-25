@@ -1,27 +1,19 @@
-/**
- * pages/admin/Solicitudes.jsx
- * Responsabilidad : Listado paginado y filtrado de solicitudes de formación.
- * Exporta         : Solicitudes (default)
- * Depende de      : hooks/usePaginatedFetch.js, services/index.js,
- *                   components/solicitudes/ModalSolicitud.jsx,
- *                   components/common/EstadoBadge.jsx, components/common/TipoEntidadBadge.jsx,
- *                   components/common/Paginador.jsx
- */
 import { useState, useMemo, useCallback } from 'react';
 import { SolicitudService } from '../../services';
 import { useToast } from '../../hooks/useToast.jsx';
 import { usePaginatedFetch } from '../../hooks/usePaginatedFetch.js';
 import Icon from '../../components/common/Icon.jsx';
 import Paginador from '../../components/common/Paginador.jsx';
+import FiltrosBar from '../../components/common/FiltrosBar.jsx';
 import TipoEntidadBadge from '../../components/common/TipoEntidadBadge.jsx';
 import { SolEstadoBadge } from '../../components/common/EstadoBadge.jsx';
-import { SOL_ESTADOS_SELECT, ANIOS_FILTRO } from '../../constants/index.js';
 import s from './Solicitudes.module.css';
 import { formatearFecha } from '../../utils/fecha.js';
 import ModalSolicitud from '../../components/solicitudes/ModalSolicitud.jsx';
 
 const LIMITE = 25;
-const FILTROS_INICIAL = { estado: '', empresa: '', anio: '' };
+const CAMPOS_FILTRO = ['nombre', 'nit', 'estadoSolicitud', 'anio', 'mes'];
+const FILTROS_INICIAL = { estado_solicitud: '', nombre: '', nit: '', anio: '', mes: '' };
 
 export default function Solicitudes() {
   const [filtros, setFiltros] = useState(FILTROS_INICIAL);
@@ -58,30 +50,13 @@ export default function Solicitudes() {
         </div>
       </div>
 
-      <div className="filters-bar">
-        <div className="filter-group">
-          <label>Empresa / NIT</label>
-          <input className="filter-input filter-search" placeholder="Buscar empresa o NIT..."
-            value={filtros.empresa} onChange={e => f('empresa', e.target.value)} />
-        </div>
-        <div className="filter-group">
-          <label>Estado</label>
-          <select className="filter-input" value={filtros.estado} onChange={e => f('estado', e.target.value)}>
-            <option value="">Todos</option>
-            {SOL_ESTADOS_SELECT.map(o => <option key={o.val} value={o.val}>{o.label}</option>)}
-          </select>
-        </div>
-        <div className="filter-group">
-          <label>Año</label>
-          <select className="filter-input" value={filtros.anio} onChange={e => f('anio', e.target.value)}>
-            <option value="">Todos</option>
-            {ANIOS_FILTRO.map(a => <option key={a} value={a}>{a}</option>)}
-          </select>
-        </div>
-        <div className="filters-end">
-          <button className="btn btn-outline btn-sm" onClick={limpiar}>Limpiar</button>
-        </div>
-      </div>
+      <FiltrosBar
+        campos={CAMPOS_FILTRO}
+        valores={filtros}
+        onChange={f}
+        onLimpiar={limpiar}
+        labelBusquedaNombre="Empresa"
+      />
 
       <div className="card">
         <div className="card-header">
@@ -146,7 +121,6 @@ export default function Solicitudes() {
         <ModalSolicitud
           id={modal.id}
           onClose={() => setModal(null)}
-          onUpdate={recargar}
         />
       )}
     </div>

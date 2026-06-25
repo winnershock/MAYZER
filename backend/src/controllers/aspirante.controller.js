@@ -1,34 +1,13 @@
-/**
- * controllers/aspirante.controller.js
- * Responsabilidad : Lógica de negocio para la gestión de aspirantes.
- * Exporta         : listar, verUno, preAprobar, rechazar, asignarAGrupo,
- *                   desasignarDeGrupo, restablecer
- * Usado en        : routes/aspirante.routes.js
- * Depende de      : config/db.js, utils/crypto.utils.js, utils/db.utils.js,
- *                   utils/formato.utils.js, services/correo.service.js,
- *                   middleware/audit.middleware.js
- * Optimización    : asignarAGrupo() — subquery ev_first simplificada con LIMIT 1 por grupo_id.
- */
 const { pool, CAT }            = require('../config/db');
-const { descifrar }            = require('../utils/crypto.utils');
+const { descifrar, hashBusqueda } = require('../utils/crypto.utils');
 const { enviarCorreo }         = require('../services/correo.service');
 const { registrarAuditoria }   = require('../middleware/audit.middleware');
 const { normalizarPaginacion, construirFiltroPeriodo } = require('../utils/db.utils');
 const { formatearFechaCO }     = require('../utils/formato.utils');
 const { notFoundSi, handleError } = require('../utils/response.utils');
 
-// Mapa id de estado → etiqueta textual
 const ETIQUETA_ESTADO = { 1: 'PENDIENTE', 2: 'PRE_APROBADO', 3: 'ASIGNADO', 4: 'RECHAZADO' };
 
-// Mapa inverso: texto → id — usa CAT.aspEstado (fuente única desde config/db.js)
-// const ID_ESTADO = { PENDIENTE: 1, PRE_APROBADO: 2, ASIGNADO: 3, RECHAZADO: 4 };
-// Eliminado: duplicaba CAT.aspEstado. Ahora se referencia directamente.
-
-/**
- * Dispara enviarCorreo en background (no bloquea la respuesta HTTP).
- * Errores SMTP se loguean pero no interrumpen el flujo del usuario.
- * @param {object} payload - Mismo payload que acepta enviarCorreo()
- */
 function enviarCorreoBackground(payload) {
   setImmediate(async () => {
     try {
@@ -39,8 +18,6 @@ function enviarCorreoBackground(payload) {
   });
 }
 
-
-/** Descifra los campos sensibles y agrega etiqueta de estado. */
 function descifrarAspirante(fila) {
   return {
     ...fila,
@@ -51,7 +28,6 @@ function descifrarAspirante(fila) {
   };
 }
 
-/** Descifra los campos sensibles del registro médico. */
 function descifrarMedico(filaMediaca) {
   if (!filaMediaca) return null;
   return {
@@ -63,10 +39,12 @@ function descifrarMedico(filaMediaca) {
   };
 }
 
-// ── GET /api/aspirantes ──────────────────────────────────────────────────────
 async function listar(req, res) {
   try {
-    const { buscar = '', estado = '', curso = '', curso_id = '', anio = '', mes = '' } = req.query;
+    const {
+      buscar = '', estado = '', curso = '', curso_id = '', anio = '', mes = '',
+      nombre = '', empresa = '', nit = '', cc = '',
+    } = req.query;
     const { limit, offset, pagina } = normalizarPaginacion(req.query);
 
     const params  = [];
@@ -76,23 +54,36 @@ async function listar(req, res) {
       const estadoId = CAT.aspEstado[estado];
       if (estadoId) { filtros.push('a.estado_id = ?'); params.push(estadoId); }
     }
-    // ── Optimizado: curso_id usa índice s.curso_id; fallback a LIKE si solo viene nombre
     if (curso_id) { filtros.push('s.curso_id = ?'); params.push(Number(curso_id)); }
     else if (curso) { filtros.push('c.nombre LIKE ?'); params.push(`%${curso}%`); }
 
-    // ✅ Rango de fechas en vez de YEAR()/MONTH() → usa índice idx_aspirante_created
-    const periodo = construirFiltroPeriodo(anio, mes, 'a.created_at');
-    if (periodo.filtro) {
-      filtros.push(periodo.filtro);
-      params.push(...periodo.params);
+    // Filtros explícitos de nombre/empresa/NIT/CC (componente de filtros unificado).
+    if (nombre)  { filtros.push('a.nombre_completo LIKE ?'); params.push(`%${nombre}%`); }
+    if (empresa) { filtros.push('e.nombre LIKE ?'); params.push(`%${empresa}%`); }
+    if (nit)     { filtros.push('e.nit LIKE ?'); params.push(`%${nit}%`); }
+    if (cc) {
+      // El número de documento está cifrado con IV aleatorio: no admite LIKE.
+      // Se compara por hash determinístico, lo que exige coincidencia exacta.
+      const hash = hashBusqueda(cc);
+      filtros.push('a.numero_documento_hash = ?');
+      params.push(hash);
     }
 
-    if (buscar) {
+    // Compatibilidad retro: `buscar` sigue combinando nombre de aspirante o empresa.
+    if (!nombre && !empresa && !nit && buscar) {
       filtros.push('(a.nombre_completo LIKE ? OR e.nombre LIKE ?)');
       params.push(`%${buscar}%`, `%${buscar}%`);
     }
 
-    const clausulaWhere = filtros.length ? 'WHERE ' + filtros.join(' AND ') : '';
+    let clausulaWhere = filtros.length ? 'WHERE ' + filtros.join(' AND ') : '';
+
+    const periodo = construirFiltroPeriodo(anio, mes, 'a.created_at');
+    if (periodo.filtro) {
+      clausulaWhere = clausulaWhere
+        ? `${clausulaWhere} ${periodo.filtro}`
+        : `WHERE ${periodo.filtro.replace(/^AND /, '')}`;
+      params.push(...periodo.params);
+    }
 
     const fromBase = `
       FROM aspirante a
@@ -102,15 +93,13 @@ async function listar(req, res) {
       JOIN aspirante_estado ae ON a.estado_id    = ae.id
       ${clausulaWhere}`;
 
-    // ✅ SQL_CALC_FOUND_ROWS: MySQL cuenta el total mientras recorre las filas
-    //    Una sola query en vez de dos queries con el mismo FROM+JOIN costoso.
     const sqlListado = `
       SELECT SQL_CALC_FOUND_ROWS
              a.id, a.nombre1, a.nombre2, a.apellido1, a.apellido2, a.nombre_completo,
              a.tipo_documento, a.numero_documento, a.email, a.telefono,
              a.fecha_nacimiento, a.estado_id, a.motivo_rechazo, a.documento_pdf, a.created_at,
              ae.nombre AS estado_nombre,
-             e.nombre  AS empresa, e.tipo_entidad,
+             e.nombre  AS empresa, e.nit AS empresa_nit, e.tipo_entidad,
              c.nombre  AS curso_requerido,
              s.id      AS solicitud_id, s.curso_id
       ${fromBase}
@@ -130,7 +119,6 @@ async function listar(req, res) {
   }
 }
 
-// ── GET /api/aspirantes/:id ──────────────────────────────────────────────────
 async function verUno(req, res) {
   try {
     const { id } = req.params;
@@ -179,7 +167,6 @@ async function verUno(req, res) {
   }
 }
 
-// ── PATCH /api/aspirantes/:id/pre-aprobar ────────────────────────────────────
 async function preAprobar(req, res) {
   const { id } = req.params;
   try {
@@ -208,7 +195,6 @@ async function preAprobar(req, res) {
          WHERE s.id = ?`,
         [aspirante.solicitud_id]
       );
-      // Correo en background — no bloquea la respuesta HTTP
       enviarCorreoBackground({
         tipo: 'APROBACION',
         destinatario: emailDescifrado,
@@ -218,7 +204,6 @@ async function preAprobar(req, res) {
       });
     }
 
-    // Auditoría en background también para no bloquear la respuesta
     setImmediate(() => {
       registrarAuditoria({
         tabla: 'aspirante', operacion: 'UPDATE', registroId: id,
@@ -236,7 +221,6 @@ async function preAprobar(req, res) {
   }
 }
 
-// ── PATCH /api/aspirantes/:id/rechazar ───────────────────────────────────────
 async function rechazar(req, res) {
   const { motivo } = req.body;
   const { id } = req.params;
@@ -259,7 +243,6 @@ async function rechazar(req, res) {
     const sinEmail = !emailDescifrado;
 
     if (emailDescifrado) {
-      // Correo en background
       enviarCorreoBackground({
         tipo: 'RECHAZO',
         destinatario: emailDescifrado,
@@ -286,7 +269,6 @@ async function rechazar(req, res) {
   }
 }
 
-// ── PATCH /api/aspirantes/:id/asignar ───────────────────────────────────────
 async function asignarAGrupo(req, res) {
   const { grupo_id } = req.body;
   const { id } = req.params;
@@ -334,7 +316,6 @@ async function asignarAGrupo(req, res) {
       return res.status(400).json({ error: 'El grupo ya no tiene cupos disponibles' });
     }
 
-    // ── Validar que el curso del aspirante coincide con el curso del grupo ──
     const [[solicitud]] = await pool.execute(
       'SELECT curso_id FROM solicitud WHERE id = ?',
       [aspirante.solicitud_id]
@@ -359,7 +340,6 @@ async function asignarAGrupo(req, res) {
     const sinEmail = !emailDescifrado;
 
     if (emailDescifrado) {
-      // Correo en background — la respuesta HTTP ya se envió, el correo llega en segundos
       enviarCorreoBackground({
         tipo: 'ASIGNACION',
         destinatario: emailDescifrado,
@@ -400,7 +380,6 @@ async function asignarAGrupo(req, res) {
   }
 }
 
-// ── PATCH /api/aspirantes/:id/desasignar ─────────────────────────────────────
 async function desasignarDeGrupo(req, res) {
   const { id } = req.params;
   try {
@@ -412,10 +391,8 @@ async function desasignarDeGrupo(req, res) {
       return res.status(400).json({ error: 'El aspirante no está asignado a ningún grupo' });
     }
 
-    // Eliminar inscripción activa
     await pool.execute('DELETE FROM inscripcion WHERE aspirante_id = ?', [id]);
 
-    // Revertir estado a PRE_APROBADO
     await pool.execute(
       'UPDATE aspirante SET estado_id = ? WHERE id = ?',
       [CAT.aspEstado.PRE_APROBADO, id]
@@ -434,8 +411,6 @@ async function desasignarDeGrupo(req, res) {
   }
 }
 
-// ── PATCH /api/aspirantes/:id/restablecer ─────────────────
-// Devuelve un aspirante RECHAZADO al estado PENDIENTE.
 async function restablecer(req, res) {
   const { id } = req.params;
   try {

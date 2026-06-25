@@ -1,35 +1,39 @@
-/**
- * pages/admin/Cursos.jsx
- * Responsabilidad : Gestión del catálogo de cursos con activación/desactivación.
- * Exporta         : Cursos (default)
- * Depende de      : services/index.js, hooks/useToast.jsx,
- *                   components/cursos/ModalCurso.jsx, components/common/*
- */
 import { useState, useEffect, useCallback } from 'react';
 import { CursoService } from '../../services';
 import { useToast } from '../../hooks/useToast.jsx';
 import ModalCurso from '../../components/cursos/ModalCurso.jsx';
 import ConfirmDialog from '../../components/common/ConfirmDialog.jsx';
+import FiltrosBar from '../../components/common/FiltrosBar.jsx';
 import Icon from '../../components/common/Icon.jsx';
 import s from './Cursos.module.css';
+
+const CAMPOS_FILTRO = ['anio', 'mes'];
+const FILTROS_INICIAL = { anio: '', mes: '' };
 
 export default function Cursos() {
   const [cursos, setCursos]           = useState([]);
   const [modal,  setModal]            = useState(null);
   const [confirmState, setConfirmState] = useState(null);
   const [mostrarInactivos, setMostrarInactivos] = useState(false);
+  const [filtros, setFiltros]         = useState(FILTROS_INICIAL);
   const toast = useToast();
+
+  const f = useCallback((k, v) => setFiltros(p => ({ ...p, [k]: v })), []);
+  const limpiar = useCallback(() => setFiltros(FILTROS_INICIAL), []);
 
   const cargar = useCallback(async () => {
     try {
+      const params = {};
+      if (filtros.anio) params.anio = filtros.anio;
+      if (filtros.mes)  params.mes  = filtros.mes;
       const { data } = mostrarInactivos
-        ? await CursoService.listarTodos()
-        : await CursoService.listar();
+        ? await CursoService.listarTodos(params)
+        : await CursoService.listar(params);
       setCursos(data);
     } catch (e) {
       if (e?.response?.status !== 401) console.error(e);
     }
-  }, [mostrarInactivos]);
+  }, [mostrarInactivos, filtros]);
 
   useEffect(() => { cargar(); }, [cargar]);
 
@@ -99,6 +103,13 @@ export default function Cursos() {
         </div>
       </div>
 
+      <FiltrosBar
+        campos={CAMPOS_FILTRO}
+        valores={filtros}
+        onChange={f}
+        onLimpiar={limpiar}
+      />
+
       <div className="card">
         <div className="table-wrap">
           {cursos.length === 0 ? (
@@ -143,7 +154,6 @@ export default function Cursos() {
                     </td>
                     <td>
                       <div className="td-actions">
-                        {/* Editar — deshabilitado si bloqueado o inactivo */}
                         <button
                           className="btn btn-sm btn-outline"
                           onClick={() => intentarEditar(c)}
@@ -153,7 +163,6 @@ export default function Cursos() {
                           Editar
                         </button>
 
-                        {/* Desactivar / Activar */}
                         {c.activo ? (
                           <button
                             className={`btn btn-sm btn-ghost ${s.btnDanger}`}

@@ -1,10 +1,3 @@
-/**
- * middleware/audit.middleware.js
- * Responsabilidad : Registro de operaciones en la tabla auditoria_log.
- * Exporta         : registrarAuditoria
- * Usado en        : controllers/aspirante, controllers/auth, controllers/grupo
- * Depende de      : config/db.js (pool)
- */
 const { pool } = require('../config/db');
 
 async function registrarAuditoria({ tabla, operacion, registroId, usuarioId, datoAntes, datoDespues, req }) {
@@ -28,7 +21,6 @@ async function registrarAuditoria({ tabla, operacion, registroId, usuarioId, dat
       ]
     );
   } catch (error) {
-    // No fallar por error de auditoría
     console.error('Error en auditoría:', error.message);
   }
 }

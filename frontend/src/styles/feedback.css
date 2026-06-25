@@ -1,21 +1,13 @@
-/* ─────────────────────────────────────────────────────────
-   feedback.css — Estados de feedback: spinner de carga, empty-state y bar-chart de reportes.
-   Depende de: tokens.css
-───────────────────────────────────────────────────────── */
-
-/* ── Spinner / loading ── */
 .spinner { width: 28px; height: 28px; border: 2.5px solid var(--border); border-top-color: var(--brand); border-radius: 50%; animation: spin .7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .loading-wrap { display: flex; align-items: center; justify-content: center; padding: 64px; flex-direction: column; gap: 14px; }
 .loading-wrap p { color: var(--text-tertiary); font-size: 12.5px; }
 
-/* ── Empty state ── */
 .empty-state { text-align: center; padding: 64px 24px; color: var(--text-tertiary); }
 .empty-icon  { width: 56px; height: 56px; margin: 0 auto 18px; background: var(--bg); border-radius: var(--r-xl); display: flex; align-items: center; justify-content: center; border: 1px solid var(--border); color: var(--subtle); }
 .empty-text  { font-size: 14px; font-weight: 650; color: var(--text-secondary); }
 .empty-sub   { font-size: 12.5px; margin-top: 6px; color: var(--text-tertiary); line-height: 1.5; }
 
-/* ── Bar chart (reportes) ── */
 .bar-chart { display: flex; flex-direction: column; gap: 11px; }
 .bar-row   { display: flex; align-items: center; gap: 10px; }
 .bar-label { width: 140px; font-size: 12px; color: var(--text-tertiary); text-align: right; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

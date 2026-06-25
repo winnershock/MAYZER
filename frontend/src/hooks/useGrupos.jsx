@@ -1,10 +1,3 @@
-/**
- * hooks/useGrupos.jsx
- * Responsabilidad : Hook para cargar y paginar grupos con filtros, esperando hidratación de Auth.
- * Exporta         : useGrupos
- * Usado en        : pages/admin/Grupos.jsx
- * Depende de      : services/grupo.service.js, hooks/useAuth.jsx
- */
 import { useState, useEffect, useCallback } from 'react';
 import { GrupoService } from '../services';
 import { useAuth } from './useAuth.jsx';
@@ -22,7 +15,6 @@ export function useGrupos(filtrosExtra = {}) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const filtrosKey = JSON.stringify(filtrosExtra);
 
-  // Reset página cuando cambian los filtros
   useEffect(() => {
     setPagina(1);
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -31,12 +23,7 @@ export function useGrupos(filtrosExtra = {}) {
   const recargar = useCallback(async (paginaOverride) => {
     if (authCargando) return;
 
-    // Si recargar() se usa por error como handler directo de un evento del DOM
-    // (ej. onClick={recargar} en vez de onClick={() => recargar()}), React le
-    // pasaría el SyntheticEvent como paginaOverride. Cualquier valor que no sea
-    // un número finito se ignora y se usa la página actual, en vez de dejar
-    // que un objeto se cuele en el querystring como page=[object Object].
-    const paginaActual = Number.isFinite(paginaOverride) ? paginaOverride : pagina;
+    const paginaActual = paginaOverride ?? pagina;
     setCargando(true);
     setError(null);
     try {
@@ -45,7 +32,6 @@ export function useGrupos(filtrosExtra = {}) {
         params.instructor_id = usuario.instructor_id;
       }
       const { data } = await GrupoService.listar(params);
-      // Soporte formato paginado { grupos, total } y fallback array plano
       if (Array.isArray(data)) {
         setGrupos(data);
         setTotal(data.length);

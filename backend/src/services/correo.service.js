@@ -1,17 +1,6 @@
-/**
- * services/correo.service.js
- * Responsabilidad : Envío de correos transaccionales con Nodemailer.
- * Exporta         : enviarCorreo
- * Usado en        : controllers/aspirante, controllers/correo
- * Depende de      : config/db.js (pool, CAT)
- * Optimización    : correo_log solo guarda resumen del asunto (no el HTML completo ~50KB).
- */
 const nodemailer = require('nodemailer');
 const { pool, CAT } = require('../config/db');
 
-// ── Transporter SMTP (lazy — se crea cuando se usa por primera vez) ──────────
-// Se crea de forma diferida para asegurar que las variables de entorno ya
-// estén cargadas, y para poder re-intentar si faltan credenciales al inicio.
 let _transporter = null;
 
 function getTransporter() {
@@ -30,19 +19,16 @@ function getTransporter() {
       tls: { rejectUnauthorized: false },
     });
 
-    // Verificar conexión en background (no bloquea el arranque)
     _transporter.verify().then(() => {
       console.info('[correo] Transporte SMTP listo');
     }).catch(err => {
       console.error('[correo] ❌ Error de conexión SMTP:', err.message);
-      // Resetear para reintentar en el próximo envío
       _transporter = null;
     });
   }
   return _transporter;
 }
 
-// ── Logo SENA SVG inline (base64 compatible con clientes de correo) ──────────
 const LOGO_SVG = `
 <table cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 8px auto;">
   <tr>
@@ -52,7 +38,6 @@ const LOGO_SVG = `
   </tr>
 </table>`;
 
-// ── Wrapper HTML base ────────────────────────────────────────────────────────
 function wrapHTML(contenido, colorAcento = '#FF6719') {
   return `<!DOCTYPE html>
 <html lang="es">
@@ -111,7 +96,6 @@ function wrapHTML(contenido, colorAcento = '#FF6719') {
 </html>`;
 }
 
-// ── Componente de caja de datos ──────────────────────────────────────────────
 function cajaInfo(filas) {
   const filasHTML = filas.map(({ label, valor }) =>
     `<tr>
@@ -127,7 +111,6 @@ function cajaInfo(filas) {
   </table>`;
 }
 
-// ── Plantillas ───────────────────────────────────────────────────────────────
 const plantillas = {
 
   APROBACION: d => wrapHTML(`
@@ -150,7 +133,7 @@ const plantillas = {
     <p style="margin:16px 0 0 0;color:#555555;font-size:14px;font-family:Arial,sans-serif;line-height:1.6;">
       En breve recibirá un nuevo correo con los detalles del grupo asignado, horarios e información sobre el inicio de la formación.
     </p>
-    <p style="margin:20px 0 0 0;color:#555555;font-size:14px;font-family:Arial,sans-serif;">Cordialmente,<br><strong>Maira &ndash; Administradora SENA Palmira</strong></p>
+    <p style="margin:20px 0 0 0;color:#555555;font-size:14px;font-family:Arial,sans-serif;">Cordialmente,<br><strong>Mayra &ndash; Administradora SENA Palmira</strong></p>
   `),
 
   RECHAZO: d => wrapHTML(`
@@ -178,7 +161,7 @@ const plantillas = {
     <p style="margin:16px 0 0 0;color:#555555;font-size:14px;font-family:Arial,sans-serif;line-height:1.6;">
       Si desea mayor información o considera que existe un error, puede comunicarse directamente con nuestra oficina en la SENA sede Palmira.
     </p>
-    <p style="margin:20px 0 0 0;color:#555555;font-size:14px;font-family:Arial,sans-serif;">Cordialmente,<br><strong>Maira &ndash; Administradora SENA Palmira</strong></p>
+    <p style="margin:20px 0 0 0;color:#555555;font-size:14px;font-family:Arial,sans-serif;">Cordialmente,<br><strong>Mayra &ndash; Administradora SENA Palmira</strong></p>
   `),
 
   ASIGNACION: d => wrapHTML(`
@@ -214,17 +197,16 @@ const plantillas = {
       </tr>
     </table>
 
-    <p style="margin:16px 0 0 0;color:#555555;font-size:14px;font-family:Arial,sans-serif;">Cordialmente,<br><strong>Maira &ndash; Administradora SENA Palmira</strong></p>
+    <p style="margin:16px 0 0 0;color:#555555;font-size:14px;font-family:Arial,sans-serif;">Cordialmente,<br><strong>Mayra &ndash; Administradora SENA Palmira</strong></p>
   `),
 
   GENERAL: d => wrapHTML(`
     <h2 style="margin:0 0 16px 0;color:#333333;font-size:20px;font-family:Arial,sans-serif;">${d.titulo || 'Información SENA Palmira'}</h2>
     <div style="color:#555555;font-size:14px;font-family:Arial,sans-serif;line-height:1.7;white-space:pre-line;">${d.cuerpo || ''}</div>
-    <p style="margin:20px 0 0 0;color:#555555;font-size:14px;font-family:Arial,sans-serif;">Cordialmente,<br><strong>Maira &ndash; Administradora SENA Palmira</strong></p>
+    <p style="margin:20px 0 0 0;color:#555555;font-size:14px;font-family:Arial,sans-serif;">Cordialmente,<br><strong>Mayra &ndash; Administradora SENA Palmira</strong></p>
   `),
 };
 
-// ── Función principal de envío ───────────────────────────────────────────────
 async function enviarCorreo({ tipo, destinatario, datos, asunto, usuarioId, aspiranteId, empresaId }) {
   const html = plantillas[tipo] ? plantillas[tipo](datos) : plantillas.GENERAL(datos);
 
@@ -247,17 +229,12 @@ async function enviarCorreo({ tipo, destinatario, datos, asunto, usuarioId, aspi
       subject: asuntoFinal,
       html,
     });
-    // Envío confirmado — sin log de volumen en producción
   } catch (e) {
     estado   = 'ERROR';
     errorMsg = e.message;
     console.error(`[correo] ❌ Error al enviar a ${destinatario}:`, e.message);
   }
 
-  // Registrar en BD independientemente del resultado
-  // ── Optimizado: solo se almacena un resumen del correo (no el HTML completo).
-  //    El cuerpo HTML puede pesar 30-60KB por registro; con el asunto y tipo
-  //    es suficiente para auditoría. Reduce el tamaño de correo_log hasta ×50.
   try {
     const resumen = `[${tipo}] ${asuntoFinal.substring(0, 200)}`;
     await pool.execute(

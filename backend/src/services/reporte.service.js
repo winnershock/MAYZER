@@ -1,23 +1,11 @@
-/**
- * services/reporte.service.js
- * Responsabilidad : Capa de datos para reportes — queries SQL aisladas de la capa HTTP.
- * Exporta         : consultarAspirantes, consultarSolicitudes, consultarGrupos,
- *                   consultarResumen, consultarAspirantesDetalle,
- *                   consultarMesesConDatos, consultarResumenEstados, consultarResumenCursos
- * Usado en        : controllers/reporte
- * Depende de      : config/db.js (pool), utils/crypto.utils.js
- * Optimización    : consultarDatosComplementariosAspirante() paraleliza 3 queries con Promise.all.
- */
 const { pool }                  = require('../config/db');
 const { descifrar }             = require('../utils/crypto.utils');
 
-const TIPOS_VALIDOS = new Set(['aspirantes', 'solicitudes', 'grupos']);
+const TIPOS_VALIDOS = new Set(['aspirantes', 'solicitudes', 'grupos', 'empresas', 'aspirantes_empresa']);
 
 function esTipoValido(tipo) {
   return TIPOS_VALIDOS.has(tipo);
 }
-
-// ── Queries originales (sin cambios) ─────────────────────────────────────────
 
 async function consultarAspirantes(filtro, params) {
   const [filas] = await pool.execute(
@@ -82,7 +70,6 @@ async function consultarGrupos(filtro, params) {
   return filas;
 }
 
-
 async function consultarEstadisticasAspirantes(filtro, params) {
   const [[stats]] = await pool.execute(
     `SELECT COUNT(*) AS total, SUM(estado_id=1) AS pendientes,
@@ -114,14 +101,6 @@ async function consultarEstadisticasGrupos(filtro, params) {
   return stats;
 }
 
-
-// ── Nuevas queries para ZIP estructurado ─────────────────────────────────────
-
-/**
- * Devuelve todos los aspirantes de un período con datos completos (cifrados descifrados),
- * incluyendo información médica, contacto de emergencia y laboral.
- * Retorna las filas crudas para procesarlas individualmente en el ZIP.
- */
 async function consultarAspirantesDetalle(filtro, params) {
   const [filas] = await pool.execute(
     `SELECT
@@ -156,7 +135,6 @@ async function consultarAspirantesDetalle(filtro, params) {
     params
   );
 
-  // Descifrar datos sensibles
   return filas.map(f => ({
     ...f,
     numero_documento: descifrar(f.numero_documento) || '',
@@ -165,11 +143,7 @@ async function consultarAspirantesDetalle(filtro, params) {
   }));
 }
 
-/**
- * Para cada aspirante, carga su info médica, contacto de emergencia y laboral.
- */
 async function consultarDatosComplementariosAspirante(aspiranteId) {
-  // ── Optimizado: 3 queries en paralelo con Promise.all (antes secuenciales)
   const [
     [[medico]],
     [[contacto]],
@@ -207,12 +181,7 @@ async function consultarDatosComplementariosAspirante(aspiranteId) {
   };
 }
 
-/**
- * Retorna los meses que tienen al menos un aspirante en el año dado.
- * Usado para construir la estructura de carpetas del ZIP.
- */
 async function consultarMesesConDatos(anio) {
-  // ── Optimizado: rango de fechas en lugar de YEAR() → usa índice idx_aspirante_created
   const anioNum = Number(anio);
   const [filas] = await pool.execute(
     `SELECT DISTINCT MONTH(created_at) AS mes
@@ -224,9 +193,6 @@ async function consultarMesesConDatos(anio) {
   return filas.map(f => f.mes);
 }
 
-/**
- * Resumen de estados para hoja estadística del Excel mensual.
- */
 async function consultarResumenEstados(filtro, params) {
   const [filas] = await pool.execute(
     `SELECT ae.nombre AS estado, COUNT(*) AS total
@@ -239,9 +205,6 @@ async function consultarResumenEstados(filtro, params) {
   return filas;
 }
 
-/**
- * Resumen de cursos para hoja estadística del Excel mensual.
- */
 async function consultarResumenCursos(filtro, params) {
   const [filas] = await pool.execute(
     `SELECT c.nombre AS curso, COUNT(a.id) AS total
@@ -255,9 +218,6 @@ async function consultarResumenCursos(filtro, params) {
   return filas;
 }
 
-/**
- * Resumen de empresas para hoja estadística del Excel mensual.
- */
 async function consultarResumenEmpresas(filtro, params) {
   const [filas] = await pool.execute(
     `SELECT e.nombre AS empresa, e.nit, e.tipo_entidad, COUNT(a.id) AS aspirantes
@@ -271,16 +231,70 @@ async function consultarResumenEmpresas(filtro, params) {
   return filas;
 }
 
+async function consultarEmpresasDetalle(filtro, params) {
+  // filtro/params actúan sobre s.created_at (vía EXISTS) para acotar por periodo
+  // sin distorsionar los conteos cuando no se filtra.
+  const tieneFiltro = !!filtro;
+  const where = tieneFiltro
+    ? `WHERE e.deleted_at IS NULL AND EXISTS (
+         SELECT 1 FROM solicitud s2 WHERE s2.empresa_id = e.id ${filtro.replace(/\bs\./g, 's2.')}
+       )`
+    : 'WHERE e.deleted_at IS NULL';
+  const joinSolicitud = tieneFiltro ? `s.empresa_id = e.id ${filtro}` : 's.empresa_id = e.id';
+
+  const [filas] = await pool.execute(
+    `SELECT e.id, e.nombre, e.nit, e.tipo_entidad, e.email, e.telefono,
+            e.nombre_contacto, e.cargo_contacto, e.direccion, e.activo,
+            ci.nombre AS ciudad, ci.departamento,
+            DATE_FORMAT(e.created_at, '%d/%m/%Y') AS fecha_registro,
+            COUNT(DISTINCT s.id) AS total_solicitudes,
+            COUNT(DISTINCT a.id) AS total_aspirantes
+     FROM empresa e
+     LEFT JOIN ciudad    ci ON e.ciudad_id    = ci.id
+     LEFT JOIN solicitud s  ON ${joinSolicitud}
+     LEFT JOIN aspirante a  ON a.solicitud_id = s.id
+     ${where}
+     GROUP BY e.id ORDER BY e.nombre`,
+    tieneFiltro ? [...params, ...params] : params
+  );
+  return filas;
+}
+
+async function consultarAspirantesEmpresaDetalle(filtro, params) {
+  const [filas] = await pool.execute(
+    `SELECT a.nombre_completo, a.tipo_documento,
+            ae.nombre AS estado,
+            c.nombre  AS curso,
+            DATE_FORMAT(a.created_at, '%d/%m/%Y') AS fecha_solicitud,
+            g.nombre  AS grupo_asignado,
+            e.nombre  AS empresa, e.nit, e.tipo_entidad,
+            e.email AS empresa_email, e.telefono AS empresa_telefono,
+            e.nombre_contacto, e.cargo_contacto, e.direccion,
+            ci.nombre AS ciudad, ci.departamento
+     FROM aspirante a
+     JOIN aspirante_estado ae ON a.estado_id    = ae.id
+     JOIN solicitud        s  ON a.solicitud_id = s.id
+     JOIN empresa          e  ON s.empresa_id   = e.id
+     JOIN curso            c  ON s.curso_id     = c.id
+     LEFT JOIN ciudad      ci ON e.ciudad_id    = ci.id
+     LEFT JOIN inscripcion i  ON i.aspirante_id = a.id
+     LEFT JOIN grupo       g  ON i.grupo_id     = g.id
+     WHERE 1=1 ${filtro} ORDER BY e.nombre, a.nombre_completo`,
+    params
+  );
+  return filas;
+}
+
 module.exports = {
   esTipoValido,
-  // originales
   consultarAspirantes,
   consultarSolicitudes,
   consultarGrupos,
+  consultarEmpresasDetalle,
+  consultarAspirantesEmpresaDetalle,
   consultarEstadisticasAspirantes,
   consultarEstadisticasSolicitudes,
   consultarEstadisticasGrupos,
-  // nuevas para ZIP
   consultarAspirantesDetalle,
   consultarDatosComplementariosAspirante,
   consultarMesesConDatos,

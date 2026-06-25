@@ -1,9 +1,3 @@
-/**
- * components/splash/SplashScreen.jsx
- * Responsabilidad : Pantalla de bienvenida post-login, controlada por sessionStorage.
- * Exporta         : SplashScreen (default)
- * Usado en        : App.jsx
- */
 import { useEffect, useState } from 'react';
 import styles from './SplashScreen.module.css';
 
@@ -11,7 +5,6 @@ export default function SplashScreen({ onDone }) {
   const [saliendo, setSaliendo] = useState(false);
 
   useEffect(() => {
-    // Inicia salida a 1.15s → animación salida 0.45s → done a 1.6s
     const t1 = setTimeout(() => setSaliendo(true), 1150);
     const t2 = setTimeout(() => onDone?.(), 1580);
     return () => { clearTimeout(t1); clearTimeout(t2); };
@@ -25,7 +18,6 @@ export default function SplashScreen({ onDone }) {
     >
       <div className={styles['splash-center']}>
 
-        {/* Logo con glow suave */}
         <div className={styles['splash-logo']}>
           <div className={styles['splash-glow']} />
           <div className={styles['splash-logo-box']}>
@@ -33,7 +25,6 @@ export default function SplashScreen({ onDone }) {
           </div>
         </div>
 
-        {/* Wordmark */}
         <div className={styles['splash-wordmark']}>
           <div className={styles['splash-title']}>
             MAY<span>Z</span>ER

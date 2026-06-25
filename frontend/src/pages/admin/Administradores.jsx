@@ -1,9 +1,3 @@
-/**
- * pages/admin/Administradores.jsx
- * Responsabilidad : Gestión de cuentas de administrador (solo SuperUsuario).
- * Exporta         : Administradores (default)
- * Depende de      : services/index.js, hooks/useToast.jsx, components/common/*
- */
 
 import { useState, useEffect, useCallback } from 'react';
 import { AdminUsuarioService } from '../../services';

@@ -1,9 +1,3 @@
-/**
- * components/public/SeccionCurso.jsx
- * Responsabilidad : Selector de curso con información expandida del formulario público.
- * Exporta         : SeccionCurso (default)
- * Usado en        : pages/public/FormPublico.jsx
- */
 import s from './SeccionCurso.module.css';
 export default function SeccionCurso({ cursoId, cursos, onChange }) {
   const seleccionado = cursos.find(x => String(x.id) === String(cursoId));

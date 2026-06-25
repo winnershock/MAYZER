@@ -1,10 +1,3 @@
-/**
- * services/index.js  — Barrel de servicios del frontend
- * Responsabilidad : Re-exporta todos los servicios del dominio para imports limpios.
- * Exporta         : AspiranteService, SolicitudService, GrupoService, EventoService,
- *                   InstructorService, CursoService, EmpresaService, CorreoService,
- *                   ReporteService, AdminUsuarioService, PublicoService
- */
 
 export { default as AspiranteService }    from './aspirante.service';
 export { default as SolicitudService }    from './solicitud.service';

@@ -1,14 +1,6 @@
-/**
- * controllers/adminUsuario.controller.js
- * Responsabilidad : Gestión de cuentas de administrador (solo SuperUsuario).
- * Exporta         : listar, activar, desactivar
- * Usado en        : routes/usuario-admin.routes.js
- * Depende de      : config/db.js (pool, CAT), utils/response.utils.js
- */
 const { pool, CAT }            = require('../config/db');
 const { notFoundSi, handleError } = require('../utils/response.utils');
 
-// ── GET /api/admin-usuarios ───────────────────────────────
 async function listar(req, res) {
   try {
     const [filas] = await pool.execute(
@@ -27,7 +19,6 @@ async function listar(req, res) {
   }
 }
 
-/** Verifica que el usuario existe y es administrador antes de cambiar su estado. */
 async function verificarEsAdmin(res, id) {
   const [filas] = await pool.execute('SELECT id, rol_id FROM usuario WHERE id = ?', [id]);
   if (notFoundSi(res, filas, 'Usuario no encontrado')) return null;
@@ -38,22 +29,17 @@ async function verificarEsAdmin(res, id) {
   return filas[0];
 }
 
-// ── PATCH /api/admin-usuarios/:id/activar ────────────────
 async function activar(req, res) {
   try {
     const usuario = await verificarEsAdmin(res, req.params.id);
     if (!usuario) return;
-    await pool.execute(
-      'UPDATE usuario SET activo = 1, intentos_fallidos = 0, nivel_bloqueo = 0, bloqueado_hasta = NULL, ultimo_intento_fallido = NULL WHERE id = ?',
-      [req.params.id]
-    );
+    await pool.execute('UPDATE usuario SET activo = 1 WHERE id = ?', [req.params.id]);
     res.json({ mensaje: 'Cuenta activada correctamente' });
   } catch (e) {
     handleError(res, e, 'activar adminUsuario', 'Error al activar cuenta');
   }
 }
 
-// ── PATCH /api/admin-usuarios/:id/desactivar ─────────────
 async function desactivar(req, res) {
   try {
     const usuario = await verificarEsAdmin(res, req.params.id);

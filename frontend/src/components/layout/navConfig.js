@@ -1,9 +1,3 @@
-/**
- * components/layout/navConfig.js
- * Responsabilidad : Configuración estática de navegación y títulos de página.
- * Exporta         : NAV_ADMIN, NAV_INSTRUCTOR, PAGE_TITLES
- * Usado en        : components/layout/Sidebar.jsx, components/layout/Topbar.jsx
- */
 
 export const NAV_ADMIN = [
   { group: 'PRINCIPAL', items: [

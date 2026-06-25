@@ -1,9 +1,3 @@
-/**
- * components/common/ConfirmDialog.jsx
- * Responsabilidad : Modal de confirmación reutilizable (reemplaza window.confirm).
- * Exporta         : ConfirmDialog (default)
- * Usado en        : pages/admin/*, components/grupos/ModalAdministrar.jsx
- */
 import styles from './ConfirmDialog.module.css';
 
 export default function ConfirmDialog({ open, mensaje, labelConfirmar = 'Confirmar', labelCancelar = 'Cancelar', variante = 'danger', onConfirm, onCancel }) {

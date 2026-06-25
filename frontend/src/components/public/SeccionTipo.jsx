@@ -1,10 +1,3 @@
-/**
- * components/public/SeccionTipo.jsx
- * Responsabilidad : Selector de tipo de perfil (Empresa / Independiente / Grupo SENA).
- * Exporta         : SeccionTipo (default)
- * Usado en        : pages/public/FormPublico.jsx
- * Depende de      : constants/index.js, components/common/Icon.jsx
- */
 import { TIPO_ENTIDAD_INFO } from '../../constants/index.js';
 import Icon from '../common/Icon.jsx';
 

@@ -1,20 +1,13 @@
-/**
- * components/public/SeccionEmpresa.jsx
- * Responsabilidad : Sección de datos de empresa/entidad del formulario público.
- * Exporta         : SeccionEmpresa (default)
- * Usado en        : pages/public/FormPublico.jsx
- * Depende de      : utils/validaciones.js
- */
 import { onChangeTelefono, onChangeNit } from '../../utils/validaciones.js';
 
 export default function SeccionEmpresa({ tipoEntidad, empresa, ciudades, onChange }) {
   const esPersona   = tipoEntidad === 'persona';
   const esGrupoSENA = tipoEntidad === 'grupo SENA';
 
-  const labelNombre = esPersona ? 'Nombre de empresa' : esGrupoSENA ? 'Nombre del grupo' : 'Nombre de la empresa';
-  const labelNit    = esPersona ? 'Número de documento' : 'NIT';
-  const phNombre    = esPersona ? 'Ej. Maizer S.A.S.' : 'Ej. Maizer S.A.S.';
-  const phNit       = esPersona ? 'Ej. 1000123456' : 'Ej. 9001234567';
+  const labelNombre = esPersona ? 'Nombre completo' : esGrupoSENA ? 'Nombre del grupo' : 'Nombre de la empresa';
+  const labelNit    = esPersona ? 'Número de documento' : esGrupoSENA ? 'Número de ficha' : 'NIT';
+  const phNombre    = esPersona ? 'Ej. Laura Gómez Pérez' : esGrupoSENA ? 'Ej. Grupo Mantenimiento Industrial' : 'Ej. Maizer S.A.S.';
+  const phNit       = esPersona ? 'Ej. 1000123456' : esGrupoSENA ? 'Ej. 2887654' : 'Ej. 9001234567';
 
   return (
     <div className="fp-card">

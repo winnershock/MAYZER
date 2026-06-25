@@ -1,25 +1,20 @@
-/**
- * controllers/evento.controller.js
- * Responsabilidad : CRUD de eventos/clases programadas en el calendario.
- * Exporta         : listar, crear, actualizar, eliminar
- * Usado en        : routes/evento.routes.js
- * Depende de      : config/db.js (pool), utils/response.utils.js
- */
-const { pool }        = require('../config/db');
+const { pool, CAT }   = require('../config/db');
 const { handleError } = require('../utils/response.utils');
 
-// ── GET /api/eventos ──────────────────────────────────────
 async function listar(req, res) {
   try {
     const { mes, anio, grupo_id, instructor_id } = req.query;
     const params = [];
     let clausulaWhere = 'WHERE 1=1';
 
-    if (mes)           { clausulaWhere += ' AND MONTH(ev.fecha_inicio) = ?'; params.push(mes); }
-    if (anio)          { clausulaWhere += ' AND YEAR(ev.fecha_inicio) = ?';  params.push(anio); }
-    if (grupo_id)      { clausulaWhere += ' AND ev.grupo_id = ?'; params.push(grupo_id); }
-    if (instructor_id) {
-      // Solo eventos de grupos donde el instructor está asignado
+    if (mes)      { clausulaWhere += ' AND MONTH(ev.fecha_inicio) = ?'; params.push(mes); }
+    if (anio)     { clausulaWhere += ' AND YEAR(ev.fecha_inicio) = ?';  params.push(anio); }
+    if (grupo_id) { clausulaWhere += ' AND ev.grupo_id = ?'; params.push(grupo_id); }
+
+    if (req.usuario.rol_id === CAT.rol.INSTRUCTOR) {
+      clausulaWhere += ' AND g.instructor_id = ?';
+      params.push(req.usuario.instructor_id);
+    } else if (instructor_id) {
       clausulaWhere += ' AND g.instructor_id = ?';
       params.push(Number(instructor_id));
     }
@@ -50,7 +45,6 @@ async function listar(req, res) {
   }
 }
 
-// ── POST /api/eventos ─────────────────────────────────────
 async function crear(req, res) {
   const { grupo_id, titulo, fecha_inicio, fecha_fin, hora_inicio, hora_fin, lugar_id, observaciones } = req.body;
   if (!grupo_id || !titulo || !fecha_inicio || !fecha_fin || !hora_inicio || !hora_fin) {
@@ -73,7 +67,6 @@ async function crear(req, res) {
   }
 }
 
-// ── PUT /api/eventos/:id ──────────────────────────────────
 async function actualizar(req, res) {
   const { titulo, fecha_inicio, fecha_fin, hora_inicio, hora_fin, lugar_id, observaciones } = req.body;
   try {
@@ -91,7 +84,6 @@ async function actualizar(req, res) {
   }
 }
 
-// ── DELETE /api/eventos/:id ───────────────────────────────
 async function eliminar(req, res) {
   try {
     await pool.execute('DELETE FROM evento WHERE id = ?', [req.params.id]);

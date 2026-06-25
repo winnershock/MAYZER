@@ -1,10 +1,3 @@
-/**
- * routes/public.routes.js
- * Responsabilidad : Endpoints públicos sin autenticación para el formulario externo.
- * Exporta         : router Express
- * Usado en        : routes/index.js  →  /api/public
- * Depende de      : controllers/public.controller.js, utils/upload.utils.js
- */
 const express = require('express');
 const rateLimit = require('express-rate-limit');
 const { upload } = require('../utils/upload.utils');

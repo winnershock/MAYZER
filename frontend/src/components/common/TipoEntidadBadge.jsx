@@ -1,9 +1,3 @@
-/**
- * components/common/TipoEntidadBadge.jsx
- * Responsabilidad : Badge visual para el tipo de entidad de una solicitud.
- * Exporta         : TipoEntidadBadge (default)
- * Usado en        : pages/admin/Solicitudes.jsx, components/solicitudes/ModalSolicitud.jsx
- */
 import s from './TipoEntidadBadge.module.css';
 
 const TIPO_MAP = {

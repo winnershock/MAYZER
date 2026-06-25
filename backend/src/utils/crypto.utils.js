@@ -1,14 +1,7 @@
-/**
- * utils/crypto.utils.js
- * Responsabilidad : Cifrado y descifrado AES-256-CBC de datos personales sensibles.
- * Exporta         : cifrar, descifrar
- * Usado en        : controllers/public, controllers/aspirante, services/reporte
- */
 const crypto = require('crypto');
 
 const ALGORITHM = 'aes-256-cbc';
 
-// Clave exactamente 32 bytes (padding con cero si es más corta)
 if (!process.env.ENCRYPTION_KEY) {
   if (process.env.NODE_ENV === 'production') {
     throw new Error('[crypto] ENCRYPTION_KEY no definida. Configura la variable de entorno antes de iniciar en producción.');
@@ -32,11 +25,9 @@ function descifrar(valor) {
   if (valor === null || valor === undefined) return null;
 
   try {
-    // Acepta tanto string como Buffer (VARBINARY de MySQL)
     const texto = Buffer.isBuffer(valor) ? valor.toString('binary') : String(valor);
     if (!texto) return null;
 
-    // Formato esperado: "<iv_hex>:<datos_hex>"
     const colonIdx = texto.indexOf(':');
     if (colonIdx < 0) {
       if (process.env.NODE_ENV !== 'production') {
@@ -68,4 +59,11 @@ function descifrar(valor) {
   }
 }
 
-module.exports = { cifrar, descifrar };
+function hashBusqueda(texto) {
+  if (texto === null || texto === undefined) return null;
+  const normalizado = String(texto).trim().toUpperCase();
+  if (!normalizado) return null;
+  return crypto.createHmac('sha256', KEY).update(normalizado).digest('hex');
+}
+
+module.exports = { cifrar, descifrar, hashBusqueda };

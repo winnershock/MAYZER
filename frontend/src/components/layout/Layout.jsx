@@ -1,12 +1,6 @@
-/**
- * components/layout/Layout.jsx
- * Responsabilidad : Shell de la aplicación — compone Sidebar + Topbar + Outlet.
- * Exporta         : Layout (default)
- * Usado en        : App.jsx (ruta raíz con autenticación)
- * Depende de      : hooks/useAuth.jsx, hooks/useToast.jsx, Sidebar.jsx, Topbar.jsx
- */
 
-import { Outlet, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth.jsx';
 import { useToast } from '../../hooks/useToast.jsx';
 import Sidebar from './Sidebar.jsx';
@@ -16,6 +10,13 @@ export default function Layout() {
   const { logout } = useAuth();
   const toast      = useToast();
   const navigate   = useNavigate();
+  const location   = useLocation();
+
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
 
   async function handleLogout() {
     await logout();
@@ -25,9 +26,13 @@ export default function Layout() {
 
   return (
     <div className="app-layout">
-      <Sidebar onLogout={handleLogout} />
+      <Sidebar
+        onLogout={handleLogout}
+        mobileOpen={mobileOpen}
+        onCloseMobile={() => setMobileOpen(false)}
+      />
       <div className="main-area">
-        <Topbar />
+        <Topbar onOpenMobileMenu={() => setMobileOpen(true)} />
         <main className="page-content">
           <Outlet />
         </main>

@@ -1,15 +1,7 @@
-/**
- * controllers/correo.controller.js
- * Responsabilidad : Envío manual de correos y consulta del historial.
- * Exporta         : enviar, historial
- * Usado en        : routes/correo.routes.js
- * Depende de      : config/db.js (pool), services/correo.service.js, utils/response.utils.js
- */
 const { pool }           = require('../config/db');
 const { enviarCorreo }   = require('../services/correo.service');
 const { handleError }    = require('../utils/response.utils');
 
-// ── POST /api/correos ─────────────────────────────────────
 async function enviar(req, res) {
   const { tipo, destinatario, datos, asunto, aspirante_id, empresa_id } = req.body;
   if (!tipo || !destinatario) {
@@ -35,14 +27,12 @@ async function enviar(req, res) {
   }
 }
 
-// ── GET /api/correos/historial ────────────────────────────
 async function historial(req, res) {
   try {
     const page  = Math.max(1, parseInt(req.query.page,  10) || 1);
     const limit = Math.min(500, Math.max(1, parseInt(req.query.limit, 10) || 50));
     const offset = (page - 1) * limit;
 
-    // ── Optimizado: SQL_CALC_FOUND_ROWS elimina la query COUNT(*) separada
     const [filas] = await pool.query(
       `SELECT SQL_CALC_FOUND_ROWS
               cl.id, ct.nombre AS tipo, cl.destinatario, cl.asunto, cl.estado, cl.enviado_en,

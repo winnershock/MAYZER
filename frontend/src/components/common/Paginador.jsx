@@ -1,10 +1,3 @@
-/**
- * components/common/Paginador.jsx
- * Responsabilidad : Paginador reutilizable con botones de página y conteo de registros.
- * Exporta         : Paginador (default)
- * Usado en        : pages/admin/Aspirantes.jsx, pages/admin/Solicitudes.jsx,
- *                   pages/admin/Grupos.jsx y otras páginas con tablas paginadas.
- */
 import { memo } from 'react';
 import s from './Paginador.module.css';
 

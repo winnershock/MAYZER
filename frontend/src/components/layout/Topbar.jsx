@@ -1,21 +1,23 @@
-/**
- * components/layout/Topbar.jsx
- * Responsabilidad : Barra superior con título de página y contexto de sede.
- * Exporta         : Topbar (default)
- * Usado en        : components/layout/Layout.jsx
- * Depende de      : components/layout/navConfig.js
- */
 import { useLocation } from 'react-router-dom';
+import Icon from '../common/Icon.jsx';
 import { PAGE_TITLES } from './navConfig.js';
 import styles from './Topbar.module.css';
 
-export default function Topbar() {
+export default function Topbar({ onOpenMobileMenu }) {
   const location = useLocation();
   const pageInfo = PAGE_TITLES[location.pathname] || { title: 'Mayzer', sub: '' };
 
   return (
     <div className={styles.topbar}>
       <div className={styles['topbar-left']}>
+        <button
+          className={styles['btn-menu-mobile']}
+          onClick={onOpenMobileMenu}
+          aria-label="Abrir menú de navegación"
+          title="Abrir menú"
+        >
+          <Icon name="menu" size={20} />
+        </button>
         <div className={styles['topbar-breadcrumb']}>
           <div>
             <div className={styles['topbar-title']}>{pageInfo.title}</div>

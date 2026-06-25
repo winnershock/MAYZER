@@ -1,19 +1,6 @@
-/**
- * services/reporte.service.js
- * Responsabilidad : Llamadas HTTP para reportes, exportaciones y resumen del dashboard.
- * Exporta         : ReporteService (default)
- * Usado en        : pages/admin/Reportes.jsx, pages/admin/Inicio.jsx
- * Depende de      : services/api.js
- */
 
 import api from './api';
 
-/**
- * Descarga un blob desde la API y lo guarda como archivo local.
- * @param {string} url      - Ruta relativa al api (e.g. '/reportes/exportar/zip')
- * @param {object} params   - Query params
- * @param {string} filename - Nombre del archivo a descargar
- */
 async function _descargarArchivo(url, params, filename) {
   const response = await api.get(url, {
     params,
@@ -28,10 +15,8 @@ async function _descargarArchivo(url, params, filename) {
 }
 
 const ReporteService = {
-  /** Obtener resumen del dashboard (KPIs, estadísticas) */
   resumen: (params) => api.get('/reportes/resumen', { params }),
 
-  /** Descargar Excel filtrado */
   descargarExcel: (params) => {
     const periodo = params.anio
       ? params.mes
@@ -45,7 +30,6 @@ const ReporteService = {
     );
   },
 
-  /** Descargar PDF filtrado */
   descargarPdf: (params) => {
     return _descargarArchivo(
       '/reportes/exportar/pdf',
@@ -54,11 +38,6 @@ const ReporteService = {
     );
   },
 
-  /**
-   * Descarga el ZIP estructurado por año, o por mes si se especifica.
-   * @param {number|string} anio
-   * @param {number|string|null} mes  - Si se pasa, filtra solo ese mes
-   */
   descargarZipAnual: (anio, mes = null) => {
     const params   = mes ? { anio, mes } : { anio };
     const sufijo   = mes ? `${String(mes).padStart(2, '0')}_${anio}` : anio;
@@ -69,11 +48,24 @@ const ReporteService = {
     );
   },
 
-  /**
-   * Descarga el PDF de expediente de un aspirante individual.
-   * @param {number|string} id      - ID del aspirante
-   * @param {string}        nombre  - Nombre del aspirante (para el filename)
-   */
+  descargarZipMisGrupos: (anio, mes = null) => {
+    const params = mes ? { anio, mes } : { anio };
+    const sufijo = mes ? `${String(mes).padStart(2, '0')}_${anio}` : anio;
+    return _descargarArchivo(
+      '/reportes/exportar/zip-mis-grupos',
+      params,
+      `Mayzer_MisGrupos_${sufijo}.zip`
+    );
+  },
+
+  descargarZipGrupo: (grupoId, nombreGrupo = 'Grupo') => {
+    return _descargarArchivo(
+      '/reportes/exportar/zip-grupo',
+      { grupo_id: grupoId },
+      `Mayzer_${nombreGrupo.replace(/[^a-zA-Z0-9_-]+/g, '_')}.zip`
+    );
+  },
+
   descargarExpedienteAspirante: (id, nombre) => {
     const nombreSeguro = (nombre || 'Aspirante')
       .normalize('NFD').replace(/[\u0300-\u036f]/g, '')

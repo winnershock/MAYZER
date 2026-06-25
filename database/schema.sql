@@ -66,10 +66,6 @@ CREATE TABLE usuario (
   contrasena_hash   VARCHAR(255) NOT NULL,
   rol_id            TINYINT UNSIGNED NOT NULL,
   activo            BOOLEAN NOT NULL DEFAULT TRUE,
-  intentos_fallidos INT     NOT NULL DEFAULT 0,
-  nivel_bloqueo     INT     NOT NULL DEFAULT 0,
-  bloqueado_hasta   DATETIME NULL,
-  ultimo_intento_fallido DATETIME NULL,
   ultimo_login      DATETIME NULL,
   created_at        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -193,6 +189,7 @@ CREATE TABLE aspirante (
   nombre_completo  VARCHAR(150)     NOT NULL,
   tipo_documento   VARCHAR(10)      NOT NULL DEFAULT 'CC',
   numero_documento VARBINARY(255)   NOT NULL,
+  numero_documento_hash CHAR(64)    NULL, -- HMAC-SHA256 determinístico, solo para búsqueda exacta de CC
   email            VARBINARY(255)   NOT NULL,
   telefono         VARBINARY(255)   NOT NULL,
   fecha_nacimiento DATE             NOT NULL,
@@ -210,7 +207,8 @@ CREATE TABLE aspirante (
   INDEX idx_aspirante_solicitud       (solicitud_id),
   INDEX idx_aspirante_created         (created_at),
   INDEX idx_aspirante_estado_created  (estado_id, created_at),
-  INDEX idx_aspirante_sol_estado      (solicitud_id, estado_id)  -- verUno + joins por solicitud
+  INDEX idx_aspirante_sol_estado      (solicitud_id, estado_id),  -- verUno + joins por solicitud
+  INDEX idx_aspirante_doc_hash        (numero_documento_hash)     -- búsqueda exacta de CC sin descifrar
 ) ENGINE=InnoDB COMMENT='Personas que aplican a un curso a través de una solicitud';
 
 CREATE TABLE aspirante_medico (

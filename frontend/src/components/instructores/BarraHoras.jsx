@@ -1,10 +1,3 @@
-/**
- * components/instructores/BarraHoras.jsx
- * Responsabilidad : Barra de progreso visual de horas asignadas vs. máximas de un instructor.
- * Exporta         : BarraHoras (default)
- * Usado en        : components/instructores/ModalTodosInstructores.jsx,
- *                   pages/admin/Instructores.jsx
- */
 import styles from './BarraHoras.module.css';
 
 export default function BarraHoras({ asignadas, maximas }) {

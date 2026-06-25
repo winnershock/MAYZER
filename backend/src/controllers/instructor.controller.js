@@ -1,24 +1,12 @@
-/**
- * controllers/instructor.controller.js
- * Responsabilidad : CRUD de instructores, historial de asignaciones y registrarAsignacion.
- * Exporta         : listar, crear, editar, desactivar, historial, registrarAsignacion
- * Usado en        : routes/instructor.routes.js, controllers/grupo.controller.js
- * Depende de      : config/db.js (pool, CAT), utils/response.utils.js
- * Optimización    : listar() reescrito con JOIN directo (eliminada subquery correlacionada IN).
- */
 const bcrypt = require('bcryptjs');
 const { pool, CAT }           = require('../config/db');
 const { handleError } = require('../utils/response.utils');
 
-// ── GET /api/instructores ─────────────────────────────────
 async function listar(req, res) {
   try {
-    // ── Optimizado: ev_sum hace JOIN directo con grupo filtrado por instructor
-    //    Elimina la subquery correlacionada IN(...) que no podía usar índice.
-    //    El LEFT JOIN de horas ahora accede solo a grupos del instructor actual.
     const [filas] = await pool.execute(
       `SELECT ins.id, ins.especialidad, ins.experiencia_anios, ins.horas_maximas, ins.activo, ins.telefono, ins.color,
-              u.id AS usuario_id, u.nombre_completo, u.email, u.nombre_usuario,
+              u.id AS usuario_id, u.nombre_completo, u.nombre_usuario, u.email,
               COUNT(DISTINCT ga.id)                               AS grupos_activos,
               COALESCE(SUM(TIMESTAMPDIFF(HOUR, ev.hora_inicio, ev.hora_fin)), 0) AS horas_asignadas
        FROM instructor ins
@@ -30,13 +18,18 @@ async function listar(req, res) {
        GROUP BY ins.id
        ORDER BY u.nombre_completo`
     );
-    res.json(filas);
+
+    const esPrivilegiado = req.usuario.rol_id === CAT.rol.ADMIN || req.usuario.rol_id === CAT.rol.SUPERUSUARIO;
+    const resultado = esPrivilegiado
+      ? filas
+      : filas.map(f => ({ id: f.id, nombre_completo: f.nombre_completo, color: f.color }));
+
+    res.json(resultado);
   } catch (e) {
     handleError(res, e, 'listar instructores', 'Error al listar instructores');
   }
 }
 
-// ── POST /api/instructores ────────────────────────────────
 async function crear(req, res) {
   const {
     nombre_completo, email, nombre_usuario, contrasena,
@@ -68,7 +61,6 @@ async function crear(req, res) {
   } finally { conn.release(); }
 }
 
-// ── PUT /api/instructores/:id ─────────────────────────────
 async function editar(req, res) {
   const { id } = req.params;
   const {
@@ -132,10 +124,6 @@ async function editar(req, res) {
   } finally { conn.release(); }
 }
 
-// ── GET /api/instructores/:id/historial ──────────────────
-// Devuelve historial de asignaciones.
-// Si la tabla historial no tiene registros para el instructor (grupos preexistentes
-// a la migración v1.2.5), hace fallback a los grupos directamente asignados.
 async function historial(req, res) {
   try {
     const { id } = req.params;
@@ -160,7 +148,6 @@ async function historial(req, res) {
 
     if (filasHistorial.length > 0) return res.json(filasHistorial);
 
-    // Fallback: grupos directamente asignados al instructor (migración retroactiva)
     const [filasGrupos] = await pool.execute(
       `SELECT
          g.id AS id,
@@ -179,7 +166,6 @@ async function historial(req, res) {
       [id]
     );
 
-    // Registrar retroactivamente en historial con un único INSERT IGNORE por lotes
     if (filasGrupos.length > 0) {
       const conn = await pool.getConnection();
       try {
@@ -198,11 +184,6 @@ async function historial(req, res) {
   }
 }
 
-/**
- * Función interna: registra en el historial cuando se asigna un instructor a un grupo.
- * Llamada desde grupo.controller.js al crear/actualizar grupo con instructor.
- * @param {import('mysql2').PoolConnection} conn  Conexión activa dentro de una transacción
- */
 async function registrarAsignacion(conn, instructorId, grupoId, usuarioId) {
   try {
     const [existe] = await conn.execute(
@@ -216,12 +197,10 @@ async function registrarAsignacion(conn, instructorId, grupoId, usuarioId) {
       );
     }
   } catch (e) {
-    // No interrumpir la transacción principal si el historial falla
     console.warn('registrarAsignacion historial (no crítico):', e.message);
   }
 }
 
-// ── DELETE /api/instructores/:id  (desactivar – no recuperable) ───────────
 async function desactivar(req, res) {
   const { id } = req.params;
   const conn = await pool.getConnection();

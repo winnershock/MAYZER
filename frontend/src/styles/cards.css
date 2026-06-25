@@ -1,17 +1,9 @@
-/* ─────────────────────────────────────────────────────────
-   cards.css — Tarjetas base (card, card-header, card-title, card-body)
-   y stat-cards con acento de color e iconos.
-   Depende de: tokens.css
-───────────────────────────────────────────────────────── */
-
-/* ── Cards ── */
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); box-shadow: var(--shadow-sm); transition: box-shadow var(--dur) var(--ease); }
 .card:hover { box-shadow: var(--shadow); }
 .card-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .card-title { font-size: 13.5px; font-weight: 660; display: flex; align-items: center; gap: 7px; color: var(--text-primary); }
 .card-body { padding: 20px; }
 
-/* ── Stat cards ── */
 .stat-card {
   background: var(--surface);
   border: 1px solid var(--border);

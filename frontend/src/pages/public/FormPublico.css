@@ -1,5 +1,4 @@
 
-/* ── Inline styles migrados a CSS global ── */
 .fp-label-tipo         { margin-left: 4px; }
 .fp-form               { width: 100%; }
 .fp-card-header-row    { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }

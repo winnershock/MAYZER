@@ -1,31 +1,22 @@
-/**
- * utils/excelEstilos.js
- * Responsabilidad : Estilos Excel centralizados con la identidad visual Mayzer.
- * Exporta         : C (paleta), FONT, ALIGN, BORDER, headerCell, subHeaderCell,
- *                   dataCell, altCell, totalCell, titleStyle
- * Usado en        : utils/informeGrupo.js, pages/admin/Reportes.jsx
- */
 
-// ── Paleta de colores Mayzer ──────────────────────────────
 export const C = {
-  NARANJA:      'FF6719',  // Brand principal Mayzer
-  NARANJA_OSC:  'CC5214',  // Naranja oscuro para bordes de header
-  NARANJA_CLR:  'FFF3EC',  // Fondo naranja muy claro (filas alternas)
-  NARANJA_MID:  'FFE0CC',  // Naranja medio (subtítulos)
+  NARANJA:      'FF6719',
+  NARANJA_OSC:  'CC5214',
+  NARANJA_CLR:  'FFF3EC',
+  NARANJA_MID:  'FFE0CC',
   BLANCO:       'FFFFFF',
-  GRIS_TITLO:   '1E1E1E',  // Texto títulos
-  GRIS_TEXTO:   '2D2D2D',  // Texto principal
-  GRIS_SEC:     '555555',  // Texto secundario
-  GRIS_META:    '888888',  // Metadatos
-  GRIS_HEADER:  'F0F0F0',  // Fondo header de info-section
-  GRIS_BORDE:   'D4D4D4',  // Bordes generales
-  GRIS_BORDE_L: 'EBEBEB',  // Bordes ligeros filas
+  GRIS_TITLO:   '1E1E1E',
+  GRIS_TEXTO:   '2D2D2D',
+  GRIS_SEC:     '555555',
+  GRIS_META:    '888888',
+  GRIS_HEADER:  'F0F0F0',
+  GRIS_BORDE:   'D4D4D4',
+  GRIS_BORDE_L: 'EBEBEB',
   VERDE:        '059669',
   ROJO:         'DC2626',
   AZUL:         '2563EB',
 };
 
-// ── Estilo borde estándar ─────────────────────────────────
 const borde = (color = C.GRIS_BORDE) => ({
   top:    { style: 'thin', color: { rgb: color } },
   bottom: { style: 'thin', color: { rgb: color } },
@@ -35,7 +26,6 @@ const borde = (color = C.GRIS_BORDE) => ({
 
 const bordeLight = () => borde(C.GRIS_BORDE_L);
 
-// ── Estilos de encabezado de columna ─────────────────────
 export const EST_HEADER_COL = {
   fill:      { fgColor: { rgb: C.NARANJA } },
   font:      { bold: true, color: { rgb: C.BLANCO }, sz: 9.5, name: 'Calibri' },
@@ -43,7 +33,6 @@ export const EST_HEADER_COL = {
   alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
 };
 
-// ── Estilos de celda de datos ─────────────────────────────
 const EST_CELDA = {
   font:      { sz: 9, color: { rgb: C.GRIS_TEXTO }, name: 'Calibri' },
   border:    bordeLight(),
@@ -75,7 +64,6 @@ const EST_CELDA_CENTRO_ALTERNA = {
   alignment: { horizontal: 'center', vertical: 'center' },
 };
 
-// ── Estilos de ficha de info (label / valor) ──────────────
 export const EST_LABEL = {
   font:      { bold: true, sz: 9, color: { rgb: C.GRIS_SEC }, name: 'Calibri' },
   fill:      { fgColor: { rgb: C.GRIS_HEADER } },
@@ -89,36 +77,24 @@ export const estValor = (bold = false, color = C.GRIS_TEXTO) => ({
   alignment: { vertical: 'center' },
 });
 
-// ── Estilo título principal ───────────────────────────────
 export const EST_TITULO = {
   font:      { bold: true, sz: 15, color: { rgb: C.NARANJA }, name: 'Calibri' },
   alignment: { horizontal: 'left', vertical: 'center' },
 };
 
-// ── Estilo subtítulo / metadata ───────────────────────────
 export const EST_SUBTITULO = {
   font:      { sz: 8.5, color: { rgb: C.GRIS_META }, name: 'Calibri', italic: true },
   alignment: { horizontal: 'left', vertical: 'center' },
 };
 
-// ── Estilo separador de sección ───────────────────────────
 export const EST_SECCION = {
   font:      { bold: true, sz: 10, color: { rgb: C.NARANJA }, name: 'Calibri' },
   fill:      { fgColor: { rgb: C.NARANJA_MID } },
   alignment: { horizontal: 'left', vertical: 'center' },
 };
 
-// ── Celda vacía ───────────────────────────────────────────
 export const VACIA = { v: '', t: 's' };
 
-// ── Helpers ───────────────────────────────────────────────
-
-/**
- * Aplica el estilo correcto (normal / alterna / número) a una celda de datos.
- * @param {*} v      Valor de la celda
- * @param {number} ri Índice de fila (0-based, desde la primera fila de datos)
- * @param {'left'|'center'|'right'} align Alineación forzada (opcional)
- */
 export function estCelda(v, ri, align = null) {
   const esNum = typeof v === 'number';
   const alterna = ri % 2 === 1;
@@ -133,9 +109,6 @@ export function estCelda(v, ri, align = null) {
   return base;
 }
 
-/**
- * Devuelve una fecha/hora de generación formateada para Colombia.
- */
 function fechaGeneracion() {
   return new Date().toLocaleString('es-CO', {
     timeZone: 'America/Bogota',
@@ -144,10 +117,6 @@ function fechaGeneracion() {
   });
 }
 
-/**
- * Encabezado estándar Mayzer para cualquier hoja Excel.
- * Retorna [fila_titulo, fila_subtitulo, fila_vacia].
- */
 export function encabezadoMayzer(tituloReporte, infoExtra = '') {
   const ahora = fechaGeneracion();
   return [

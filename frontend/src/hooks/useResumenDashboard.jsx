@@ -1,20 +1,9 @@
-/**
- * hooks/useResumenDashboard.jsx
- * Responsabilidad : Hook para cargar y cachear KPIs del dashboard con auto-revalidación.
- * Exporta         : useResumenDashboard
- * Usado en        : pages/admin/Inicio.jsx
- * Depende de      : services/reporte.service.js, services/grupo.service.js,
- *                   services/solicitud.service.js, services/evento.service.js,
- *                   hooks/useAuth.jsx
- * Optimización    : Grupos y solicitudes filtrados en servidor (antes limit:500 + filtro cliente).
- */
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { ReporteService, GrupoService, SolicitudService, EventoService } from '../services';
 import { useAuth } from './useAuth.jsx';
 
 const INTERVALO_MS = 30_000;
 
-// Cache en memoria — singleton de módulo, persiste entre navegaciones de ruta
 const _cache = {};
 
 function getCacheKey(usuario, esAdmin, esSuperUsuario, esInstructor) {
@@ -52,8 +41,6 @@ export function useResumenDashboard() {
       let nextResumen, nextSolicitudes = [], nextGrupos = [];
 
       if (esAdmin || esSuperUsuario) {
-        // ── Optimizado: grupos filtrados en servidor (estado=EN_CURSO, limit=5)
-        //    Antes cargaba 500 grupos y filtraba en cliente — ahora solo 5.
         const [r, s, g] = await Promise.all([
           ReporteService.resumen().catch(() => ({ data: null })),
           SolicitudService.listar({ estado: 'PENDIENTE', limit: 5 }).catch(() => ({ data: [] })),
@@ -68,8 +55,6 @@ export function useResumenDashboard() {
         nextGrupos      = grpArray.slice(0, 5);
 
       } else if (esInstructor && usuario?.instructor_id) {
-        // ── Optimizado: grupos en curso del instructor filtrados en servidor
-        //    Se hacen 4 queries en paralelo en lugar de 1 con limit:500 + filtro cliente.
         const [gAll, gEnCurso, gProg, ev] = await Promise.all([
           GrupoService.listar({ instructor_id: usuario.instructor_id, limit: 1 }).catch(() => ({ data: [] })),
           GrupoService.listar({ instructor_id: usuario.instructor_id, estado: 'EN_CURSO',   limit: 5  }).catch(() => ({ data: [] })),
@@ -98,7 +83,6 @@ export function useResumenDashboard() {
         return;
       }
 
-      // Solo actualiza si los datos cambiaron — evita re-renders vacíos en autoRefresh
       setResumen(prev =>
         JSON.stringify(prev) !== JSON.stringify(nextResumen) ? nextResumen : prev);
       setSolicitudes(prev =>

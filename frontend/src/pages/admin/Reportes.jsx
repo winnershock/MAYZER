@@ -1,9 +1,3 @@
-/**
- * pages/admin/Reportes.jsx
- * Responsabilidad : Descarga de reportes PDF, Excel y ZIP con filtros de período.
- * Exporta         : Reportes (default)
- * Depende de      : services/index.js, hooks/useToast.jsx, utils/descarga.js
- */
 import { useState, useEffect, useCallback } from 'react';
 import { ReporteService } from '../../services';
 import Icon from '../../components/common/Icon.jsx';
@@ -12,17 +6,16 @@ import { useToast } from '../../hooks/useToast.jsx';
 import { MESES, ANIOS_FILTRO } from '../../constants/index.js';
 import { descargarArchivo, urlExportarReporte, nombreArchivoReporte } from '../../utils/descarga.js';
 
-// MESES es 0-based; MESES_LABELS agrega '' en posición 0 para indexar con número de mes (1-12)
 const MESES_LABELS = ['', ...MESES];
 
 const TABLAS = [
-  { key: 'aspirantes',  label: 'Aspirantes',  icon: 'users',       desc: 'Listado con estado, empresa y grupo asignado' },
-  { key: 'solicitudes', label: 'Solicitudes',  icon: 'clipboard',   desc: 'Solicitudes por empresa con cantidad de aspirantes' },
-  { key: 'grupos',      label: 'Grupos',       icon: 'book',        desc: 'Grupos de formación con instructor y ocupación' },
+  { key: 'aspirantes',         label: 'Aspirantes',           icon: 'users',     desc: 'Listado con estado, empresa y grupo asignado' },
+  { key: 'solicitudes',        label: 'Solicitudes',          icon: 'clipboard', desc: 'Solicitudes por empresa con cantidad de aspirantes' },
+  { key: 'grupos',             label: 'Grupos',                icon: 'book',      desc: 'Grupos de formación con instructor y ocupación' },
+  { key: 'empresas',           label: 'Empresas',             icon: 'building',  desc: 'Directorio completo de empresas con contacto y ubicación' },
+  { key: 'aspirantes_empresa', label: 'Aspirantes + Empresa', icon: 'users',     desc: 'Aspirantes con toda la información de su empresa' },
 ];
 
-
-// ── Componente BarChart simple ────────────────────────────
 function BarChart({ items, keyLabel, keyVal, color = 'var(--brand)' }) {
   const max = Math.max(...(items?.map(x => Number(x[keyVal])) || [1]), 1);
   if (!items?.length) return <p className={s.barChartEmpty}>Sin datos en el periodo.</p>;
@@ -49,9 +42,11 @@ function BarChart({ items, keyLabel, keyVal, color = 'var(--brand)' }) {
   );
 }
 
-// ── Botones de descarga por tabla ─────────────────────────
+const TIPOS_SOLO_EXCEL = new Set(['empresas', 'aspirantes_empresa']);
+
 function BotonesDescarga({ tabla, anio, mes, compact = false, toast }) {
   const [descargando, setDescargando] = useState(null);
+  const soloExcel = TIPOS_SOLO_EXCEL.has(tabla);
 
   async function descargar(formato) {
     setDescargando(formato);
@@ -69,17 +64,19 @@ function BotonesDescarga({ tabla, anio, mes, compact = false, toast }) {
 
   return (
     <div className={s.descargaWrap}>
-      <button
-        className={`btn btn-ghost btn-sm ${s.btnDescargaPdf}`}
-        style={{ minWidth: compact ? 0 : 70 }}
-        disabled={!!descargando}
-        onClick={() => descargar('pdf')}
-        title="Descargar PDF"
-      >
-        {descargando === 'pdf'
-          ? <span className={s.btnCargando}>...</span>
-          : <><Icon name="pdf" size={13} />{!compact && ' PDF'}</>}
-      </button>
+      {!soloExcel && (
+        <button
+          className={`btn btn-ghost btn-sm ${s.btnDescargaPdf}`}
+          style={{ minWidth: compact ? 0 : 70 }}
+          disabled={!!descargando}
+          onClick={() => descargar('pdf')}
+          title="Descargar PDF"
+        >
+          {descargando === 'pdf'
+            ? <span className={s.btnCargando}>...</span>
+            : <><Icon name="pdf" size={13} />{!compact && ' PDF'}</>}
+        </button>
+      )}
       <button
         className={`btn btn-ghost btn-sm ${s.btnDescargaExcel}`}
         style={{ minWidth: compact ? 0 : 80 }}
@@ -95,7 +92,6 @@ function BotonesDescarga({ tabla, anio, mes, compact = false, toast }) {
   );
 }
 
-// ── Componente principal ──────────────────────────────────
 export default function Reportes() {
   const [filtros,        setFiltros]        = useState({ anio: new Date().getFullYear(), mes: '' });
   const [datos,          setDatos]          = useState(null);
@@ -110,7 +106,7 @@ export default function Reportes() {
       if (filtros.mes) params.mes = filtros.mes;
       const { data } = await ReporteService.resumen(params);
       setDatos(data);
-    } catch { /* silencioso */ }
+    } catch {}
     finally { setCargando(false); }
   }, [filtros]);
 
@@ -121,12 +117,6 @@ export default function Reportes() {
     ? `${MESES_LABELS[Number(filtros.mes)]} ${filtros.anio}`
     : `Año ${filtros.anio}`;
 
-  // ── ZIP anual ──────────────────────────────────────────
-  // Usa el nuevo endpoint del backend que genera el ZIP estructurado:
-  //   AÑO / Mes_XX_Nombre / Aspirantes_Mes.xlsx
-  //                        / Nombre_Apellido_ID /
-  //                            Expediente_Nombre.pdf
-  //                            Documento_Original.pdf
   async function descargarZip() {
     setDescargandoZip(true);
     try {
@@ -139,7 +129,6 @@ export default function Reportes() {
     }
   }
 
-  // ── KPI cards ─────────────────────────────────────────
   const kpis = datos ? [
     {
       label: 'Solicitudes', value: datos.solicitudes?.total ?? 0,
@@ -160,7 +149,6 @@ export default function Reportes() {
 
   return (
     <div>
-      {/* Encabezado */}
       <div className="page-header">
         <div>
           <h1>Reportes</h1>
@@ -177,7 +165,6 @@ export default function Reportes() {
         </button>
       </div>
 
-      {/* Filtros */}
       <div className={`filters-bar ${s.filtersBar}`}>
         <div className="filter-group">
           <label>Año</label>
@@ -207,7 +194,6 @@ export default function Reportes() {
         <div className="alert alert-warn">No se pudieron cargar los datos del periodo.</div>
       ) : (
         <>
-          {/* KPIs */}
           <div className="stat-grid">
             {kpis.map((k, i) => (
               <div key={i} className="stat-card">
@@ -227,7 +213,6 @@ export default function Reportes() {
             ))}
           </div>
 
-          {/* Gráficos */}
           <div className="section-two">
             <div className="card">
               <div className="card-header">
@@ -264,7 +249,6 @@ export default function Reportes() {
             </div>
           </div>
 
-          {/* Tabla aspirantes por estado */}
           <div className={`card ${s.cardMarginTop}`}>
             <div className="card-header">
               <span className="card-title">
@@ -308,7 +292,6 @@ export default function Reportes() {
             </div>
           </div>
 
-          {/* Descarga por tabla */}
           <div className={`card ${s.cardMarginTop}`}>
             <div className="card-header">
               <span className="card-title">

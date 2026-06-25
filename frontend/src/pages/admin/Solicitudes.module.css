@@ -1,21 +1,13 @@
-/* ─────────────────────────────────────────────────────────
-   Solicitudes.module.css — Estilos específicos de la página de Solicitudes
-   Depende de: tokens.css (variables CSS globales)
-───────────────────────────────────────────────────────── */
-
-/* ── Contador de pendientes en page-header ── */
 .statPendiente {
   color: var(--amber);
   font-weight: 700;
 }
 
-/* ── Contador de registros ── */
 .totalRegistros {
   font-size: 12px;
   color: var(--text-tertiary);
 }
 
-/* ── Celdas de tabla ── */
 .celdaId {
   color: var(--text-tertiary);
   font-family: monospace;

@@ -1,9 +1,3 @@
-/* ─────────────────────────────────────────────────────────
-   AccionesAspirante.css
-   Estilos de los botones de acción por fila de aspirante.
-   Depende de: styles/tokens.css (variables globales)
-───────────────────────────────────────────────────────── */
-
 .asp-acciones {
   display: flex;
   gap: 4px;

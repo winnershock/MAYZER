@@ -1,11 +1,3 @@
-/**
- * components/grupos/ModalAdministrar.jsx
- * Responsabilidad : Modal de administración de aspirantes dentro de un grupo.
- * Exporta         : ModalAdministrar (default)
- * Usado en        : pages/admin/Grupos.jsx
- * Depende de      : services/index.js, hooks/useToast.jsx, components/common/ConfirmDialog.jsx,
- *                   components/common/Icon.jsx, utils/informeGrupo.js
- */
 import { useState, useEffect, useRef, useCallback } from 'react';
 import s from './ModalAdministrar.module.css';
 import { AspiranteService, GrupoService } from '../../services';
@@ -45,7 +37,6 @@ export default function ModalAdministrar({ grupoId, onClose, onDone }) {
 
       const libres = (todosRes.data?.aspirantes || []).filter(a => {
         if (miembros.some(m => m.id === a.id)) return false;
-        // Solo mostrar aspirantes cuyo curso solicitado coincida con el del grupo
         const cursoGrp = (grp?.curso_nombre || '').toLowerCase().trim();
         const cursoAsp = (a.curso_requerido || '').toLowerCase().trim();
         if (cursoGrp && cursoAsp && cursoGrp !== cursoAsp) return false;
@@ -116,7 +107,6 @@ export default function ModalAdministrar({ grupoId, onClose, onDone }) {
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className={`modal modal-lg ${s['modal-wide']}`}>
 
-        {/* Encabezado — nombre y código en filas distintas */}
         <div className={`modal-title ${s['titulo-grupo']}`}>
           Administrar aspirantes
         </div>
@@ -145,7 +135,6 @@ export default function ModalAdministrar({ grupoId, onClose, onDone }) {
         ) : (
           <div className={s['dos-columnas']}>
 
-            {/* Asignados */}
             <div>
               <div className={s['seccion-titulo2']}>
                 <span className={s['badge-count-verde']}>{inscritos}</span>
@@ -180,7 +169,6 @@ export default function ModalAdministrar({ grupoId, onClose, onDone }) {
               </div>
             </div>
 
-            {/* Pre-aprobados disponibles */}
             <div>
               <div className={s['seccion-titulo2']}>
                 <span className={s['badge-count-brand']}>{preAprobados.length}</span>

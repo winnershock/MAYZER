@@ -1,10 +1,3 @@
-/**
- * config/db.js
- * Responsabilidad : Configuración del pool de conexiones MySQL y constantes CAT.
- * Exporta         : pool, CAT
- * Usado en        : Todos los controladores y middlewares que acceden a la base de datos.
- * Optimización    : connectionLimit 15 (antes 10), queueLimit 100 — soporta exportaciones ZIP concurrentes.
- */
 const mysql = require('mysql2/promise');
 require('dotenv').config();
 
@@ -15,19 +8,10 @@ const pool = mysql.createPool({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME || 'mayzer_db',
   waitForConnections: true,
-  // ── Optimizado: 15 conexiones para soportar exportaciones ZIP concurrentes
-  //    (antes 10). queueLimit sube a 100 para evitar rechazos bajo picos de carga.
   connectionLimit: 15,
   queueLimit: 100,
   charset: 'utf8mb4',
-  // 'Z' (UTC) — mysql2 siempre serializa los Date() de JS usando sus
-  // componentes UTC al escribir (ignora cualquier offset configurado aquí),
-  // así que dejar 'timezone' en un offset distinto (ej. '-05:00') hace que
-  // la LECTURA reinterprete esos valores sumando ese offset de más cada vez
-  // que se relee una fecha — desfase que se acumula en cada ciclo de
-  // bloqueo/desbloqueo. Con 'Z' la escritura y lectura quedan simétricas.
-  timezone: 'Z',
-  // Keep-alive: mantiene conexiones abiertas, evita overhead de reconexión
+  timezone: '-05:00',
   enableKeepAlive: true,
   keepAliveInitialDelay: 10000,
 });
@@ -43,7 +27,6 @@ async function testConnection() {
   }
 }
 
-// IDs de catálogos – fuente única de verdad
 const CAT = {
   rol:        { ADMIN: 1, INSTRUCTOR: 2, SUPERUSUARIO: 3 },
   solEstado:  { PENDIENTE: 1, EN_REVISION: 2, APROBADA: 3, RECHAZADA: 4 },

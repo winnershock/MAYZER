@@ -1,8 +1,3 @@
-/* ─────────────────────────────────────────────────────────
-   Topbar.module.css — Barra superior de página
-   Depende de: tokens.css
-───────────────────────────────────────────────────────── */
-
 .topbar {
   height: var(--topbar-h);
   background: var(--surface);
@@ -83,4 +78,26 @@
   font-weight: 660;
   letter-spacing: .025em;
   white-space: nowrap;
+}
+
+.btn-menu-mobile {
+  display: none;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-xs);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  background: var(--bg-subtle);
+}
+
+.btn-menu-mobile:hover { color: var(--text-primary); background: var(--bg); }
+
+@media (max-width: 640px) {
+  .topbar { padding: 0 16px; gap: 10px; }
+  .btn-menu-mobile { display: flex; }
+.topbar-pill span { display: none; }
+  .topbar-pill { padding: 6px; }
 }

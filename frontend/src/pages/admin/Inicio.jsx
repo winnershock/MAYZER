@@ -1,10 +1,3 @@
-/**
- * pages/admin/Inicio.jsx
- * Responsabilidad : Dashboard principal con KPIs, gráficos y resumen de actividad.
- * Exporta         : Inicio (default)
- * Depende de      : hooks/useResumenDashboard.jsx, hooks/useAuth.jsx,
- *                   components/common/Icon.jsx
- */
 import { useMemo, memo } from 'react';
 import { useNavigate }   from 'react-router-dom';
 import styles from './Inicio.module.css';
@@ -13,8 +6,6 @@ import { useResumenDashboard }   from '../../hooks/useResumenDashboard.jsx';
 import Icon from '../../components/common/Icon.jsx';
 import { SolEstadoBadge, GrpEstadoBadge } from '../../components/common/EstadoBadge.jsx';
 import { formatearFecha } from '../../utils/fecha.js';
-
-// ── Subcomponentes memoizados ─────────────────────────────
 
 const StatCard = memo(function StatCard({ label, value, icon, color, bg, accent, sub, onClick }) {
   return (
@@ -72,8 +63,6 @@ const GrupoItem = memo(function GrupoItem({ g }) {
   );
 });
 
-// ── Generador de tarjetas de estadísticas ─────────────────
-
 function buildStatCards(resumen, esInstructor, nav) {
   if (esInstructor) {
     return [
@@ -125,8 +114,6 @@ function buildStatCards(resumen, esInstructor, nav) {
   ];
 }
 
-// ── Componente principal ──────────────────────────────────
-
 export default function Inicio() {
   const { usuario, esAdmin, esSuperUsuario, esInstructor } = useAuth();
   const { resumen, solicitudes, grupos, cargando, error } = useResumenDashboard();
@@ -144,13 +131,11 @@ export default function Inicio() {
     []
   );
 
-  // statCards solo recalcula si resumen o esInstructor cambian
   const statCards = useMemo(
     () => buildStatCards(resumen, esInstructor, nav),
     [resumen, esInstructor, nav]
   );
 
-  // Resumen del sistema — solo recalcula si resumen cambia
   const resumenSistema = useMemo(() => resumen ? [
     { label: 'Empresas registradas',  value: resumen.empresasTop?.length    ?? '–', color: 'var(--tsa-blue)' },
     { label: 'Aspirantes aprobados',  value: resumen.aspirantes?.asignados  ?? 0,   color: 'var(--brand)' },
@@ -174,7 +159,6 @@ export default function Inicio() {
 
   return (
     <div>
-      {/* Encabezado — banda visual con gradiente suave */}
       <div className={styles['inicio-header']}>
         <div>
           <h1 className={styles['inicio-header-title']}>
@@ -200,14 +184,12 @@ export default function Inicio() {
         </div>
       </div>
 
-      {/* Tarjetas de estadísticas */}
       <div className="stat-grid">
         {statCards.map((s, i) => (
           <StatCard key={i} {...s} />
         ))}
       </div>
 
-      {/* Listas */}
       <div className={`section-two ${styles['inicio-section-two']}`}>
         {(esAdmin || esSuperUsuario) && (
           <div className="card">
@@ -243,7 +225,6 @@ export default function Inicio() {
         </div>
       </div>
 
-      {/* Resumen del sistema — SOLO ADMIN/SUPERUSUARIO */}
       {(esAdmin || esSuperUsuario) && resumen && (
         <div className="card">
           <div className="card-header">

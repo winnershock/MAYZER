@@ -1,10 +1,3 @@
-/**
- * pages/admin/Aspirantes.jsx
- * Responsabilidad : Listado paginado y filtrado de aspirantes con acciones por estado.
- * Exporta         : Aspirantes (default)
- * Depende de      : hooks/usePaginatedFetch.js, services/index.js,
- *                   components/aspirantes/*, components/common/*
- */
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { AspiranteService, CursoService } from '../../services';
 import { useToast } from '../../hooks/useToast.jsx';
@@ -17,18 +10,18 @@ import ModalAsignar      from '../../components/aspirantes/ModalAsignar.jsx';
 import ModalDetalle      from '../../components/aspirantes/ModalDetalle.jsx';
 import AccionesAspirante from '../../components/aspirantes/AccionesAspirante.jsx';
 import ConfirmDialog     from '../../components/common/ConfirmDialog.jsx';
+import FiltrosBar        from '../../components/common/FiltrosBar.jsx';
 import Icon from '../../components/common/Icon.jsx';
-import { MESES, ANIOS_FILTRO, ASP_ESTADOS_SELECT, API_BASE } from '../../constants/index.js';
+import { ASP_ESTADOS_SELECT, API_BASE } from '../../constants/index.js';
 
-const ESTADOS = [{ val: '', label: 'Todos los estados' }, ...ASP_ESTADOS_SELECT];
+const CAMPOS_FILTRO = ['nombre', 'empresa', 'nit', 'cc', 'curso', 'estado', 'anio', 'mes'];
 
-// Estados que permiten acción masiva
 const ESTADO_ACCION = {
   PENDIENTE:    { label: 'Pendientes',    color: '#e05500', acciones: ['pre-aprobar', 'rechazar'] },
   PRE_APROBADO: { label: 'Pre-aprobados', color: '#FF6719', acciones: ['asignar'] },
 };
 
-const FILTROS_INICIAL = { buscar: '', estado: '', curso_id: '', anio: '', mes: '' };
+const FILTROS_INICIAL = { nombre: '', empresa: '', nit: '', cc: '', estado: '', curso_id: '', anio: '', mes: '' };
 const LIMITE = 25;
 
 export default function Aspirantes() {
@@ -47,7 +40,6 @@ export default function Aspirantes() {
   const { esAdmin } = useAuth();
   const toast = useToast();
 
-  // Cargar cursos una sola vez
   useEffect(() => {
     CursoService.listar()
       .then(r => {
@@ -57,7 +49,6 @@ export default function Aspirantes() {
       .catch(() => {});
   }, []);
 
-  // Limpiar selección y resetear página al cambiar filtros
   useEffect(() => {
     setSeleccionados(new Set());
     setEstadoSeleccion(null);
@@ -65,14 +56,15 @@ export default function Aspirantes() {
     setPagina(1);
   }, [filtros]);
 
-  // Carga principal con debounce
   const cargar = useCallback(async () => {
     setCargando(true);
     try {
       const params = { limit: LIMITE, page: pagina };
-      if (filtros.buscar)   params.buscar   = filtros.buscar;
+      if (filtros.nombre)   params.nombre   = filtros.nombre;
+      if (filtros.empresa)  params.empresa  = filtros.empresa;
+      if (filtros.nit)      params.nit      = filtros.nit;
+      if (filtros.cc)       params.cc       = filtros.cc;
       if (filtros.estado)   params.estado   = filtros.estado;
-      // ── Optimizado: enviar curso_id al backend (usa índice s.curso_id en lugar de LIKE)
       if (filtros.curso_id) params.curso_id = filtros.curso_id;
       if (filtros.anio)     params.anio     = filtros.anio;
       if (filtros.mes)      params.mes      = filtros.mes;
@@ -92,15 +84,12 @@ export default function Aspirantes() {
     return () => clearTimeout(t);
   }, [cargar]);
 
-  // ── Helpers de estado local ──────────────────────────────
   function actualizarEstadoLocal(id, nuevoEstado) {
     setAspirantes(prev => prev.map(a =>
       a.id === id ? { ...a, estado_proceso: nuevoEstado } : a
     ));
   }
 
-  // ── Acciones individuales ────────────────────────────────
-  // useCallback para que AccionesAspirante memo no se invalide en cada render
   const preAprobar = useCallback(async (id) => {
     actualizarEstadoLocal(id, 'PRE_APROBADO');
     try {
@@ -139,7 +128,6 @@ export default function Aspirantes() {
     });
   }
 
-  // ── Selección homogénea ──────────────────────────────────
   function puedeSeleccionar(aspirante) {
     if (!esAdmin) return false;
     if (!ESTADO_ACCION[aspirante.estado_proceso]) return false;
@@ -197,7 +185,6 @@ export default function Aspirantes() {
     setAlertaAsignacion(null);
   }
 
-  // ── Acciones masivas ─────────────────────────────────────
   const aspirantesSeleccionados = useMemo(
     () => aspirantes.filter(a => seleccionados.has(a.id)),
     [aspirantes, seleccionados]
@@ -208,7 +195,6 @@ export default function Aspirantes() {
     [estadoSeleccion]
   );
 
-  // Ejecuta pre-aprobaciones en paralelo → N veces más rápido que secuencial
   async function preAprobarSeleccionados() {
     await Promise.allSettled(aspirantesSeleccionados.map(a => preAprobar(a.id)));
     limpiarSeleccion();
@@ -240,13 +226,11 @@ export default function Aspirantes() {
     limpiarSeleccion();
   }
 
-  // ── Filtros ──────────────────────────────────────────────
   const f = useCallback((k, v) => setFiltros(p => ({ ...p, [k]: v })), []);
   const limpiar = useCallback(() => { setFiltros(FILTROS_INICIAL); setPagina(1); }, []);
 
   const totalPaginas = Math.max(1, Math.ceil(total / LIMITE));
 
-  // ── Estadísticas visibles (memoizadas) ───────────────────
   const { pendientes, preAprobados } = useMemo(() => ({
     pendientes:   aspirantes.filter(a => a.estado_proceso === 'PENDIENTE').length,
     preAprobados: aspirantes.filter(a => a.estado_proceso === 'PRE_APROBADO').length,
@@ -283,7 +267,6 @@ export default function Aspirantes() {
         </div>
       )}
 
-      {/* Barra de acciones masivas */}
       {haySeleccion && esAdmin && (
         <div
           className={s.barraAcciones}
@@ -339,46 +322,15 @@ export default function Aspirantes() {
         </div>
       )}
 
-      {/* Filtros */}
-      <div className="filters-bar">
-        <div className="filter-group">
-          <label>Buscar</label>
-          <input className="filter-input filter-search" placeholder="Buscar por aspirante o empresa..."
-            value={filtros.buscar} onChange={e => f('buscar', e.target.value)} />
-        </div>
-        <div className="filter-group">
-          <label>Estado</label>
-          <select className="filter-input" value={filtros.estado} onChange={e => f('estado', e.target.value)}>
-            {ESTADOS.map(o => <option key={o.val} value={o.val}>{o.label}</option>)}
-          </select>
-        </div>
-        <div className="filter-group">
-          <label>Curso</label>
-          <select className={`filter-input ${s.filtroCurso}`} value={filtros.curso_id} onChange={e => f('curso_id', e.target.value)}>
-            <option value="">Todos los cursos</option>
-            {cursos.map(c => <option key={c.id} value={String(c.id)}>{c.nombre}</option>)}
-          </select>
-        </div>
-        <div className="filter-group">
-          <label>Año</label>
-          <select className="filter-input" value={filtros.anio} onChange={e => f('anio', e.target.value)}>
-            <option value="">Todos</option>
-            {ANIOS_FILTRO.map(a => <option key={a} value={a}>{a}</option>)}
-          </select>
-        </div>
-        <div className="filter-group">
-          <label>Mes</label>
-          <select className="filter-input" value={filtros.mes} onChange={e => f('mes', e.target.value)}>
-            <option value="">Todos</option>
-            {MESES.map((m, i) => <option key={i + 1} value={i + 1}>{m}</option>)}
-          </select>
-        </div>
-        <div className="filters-end">
-          <button className="btn btn-outline btn-sm" onClick={limpiar}>Limpiar</button>
-        </div>
-      </div>
+      <FiltrosBar
+        campos={CAMPOS_FILTRO}
+        valores={filtros}
+        onChange={f}
+        onLimpiar={limpiar}
+        cursos={cursos}
+        labelBusquedaNombre="Aspirante"
+      />
 
-      {/* Tabla */}
       <div className="card">
         <div className="card-header">
           <span className="card-title">Lista de aspirantes</span>
@@ -399,7 +351,6 @@ export default function Aspirantes() {
                 <tr>
                   {esAdmin && (
                     <th className={s.colCheck}>
-                      {/* Indicador de selección-todos */}
                       <button
                         type="button"
                         aria-label="Seleccionar todos"
@@ -454,7 +405,6 @@ export default function Aspirantes() {
                         transition: 'background 0.15s, opacity 0.15s',
                       }}
                     >
-                      {/* Columna de selección — icono en lugar de checkbox */}
                       {esAdmin && (
                         <td className={s.colCheck}
                           onClick={e => { e.stopPropagation(); if (puedeCheck || estaSeleccionado) toggleSeleccion(a); }}>
