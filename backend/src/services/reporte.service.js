@@ -143,44 +143,6 @@ async function consultarAspirantesDetalle(filtro, params) {
   }));
 }
 
-async function consultarDatosComplementariosAspirante(aspiranteId) {
-  const [
-    [[medico]],
-    [[contacto]],
-    [[laboral]],
-  ] = await Promise.all([
-    pool.execute(
-      'SELECT * FROM aspirante_medico WHERE aspirante_id = ?',
-      [aspiranteId]
-    ).catch(() => [[null]]),
-    pool.execute(
-      'SELECT * FROM aspirante_contacto_emergencia WHERE aspirante_id = ?',
-      [aspiranteId]
-    ).catch(() => [[null]]),
-    pool.execute(
-      `SELECT al.*, emp.nombre AS empresa_nombre
-       FROM aspirante_laboral al
-       LEFT JOIN empresa emp ON al.empresa_id = emp.id
-       WHERE al.aspirante_id = ?`,
-      [aspiranteId]
-    ).catch(() => [[null]]),
-  ]);
-
-  const descifrarMedico = (m) => m ? {
-    ...m,
-    eps:          descifrar(m.eps)          || null,
-    arl:          descifrar(m.arl)          || null,
-    antecedentes: descifrar(m.antecedentes) || null,
-    medicamentos: descifrar(m.medicamentos) || null,
-  } : null;
-
-  return {
-    medico:   descifrarMedico(medico   || null),
-    contacto: contacto || null,
-    laboral:  laboral  || null,
-  };
-}
-
 async function consultarMesesConDatos(anio) {
   const anioNum = Number(anio);
   const [filas] = await pool.execute(
@@ -262,7 +224,11 @@ async function consultarEmpresasDetalle(filtro, params) {
 
 async function consultarAspirantesEmpresaDetalle(filtro, params) {
   const [filas] = await pool.execute(
-    `SELECT a.nombre_completo, a.tipo_documento,
+    `SELECT a.nombre_completo,
+            a.nombre1, a.nombre2, a.apellido1, a.apellido2,
+            a.tipo_documento, a.numero_documento,
+            a.email, a.telefono,
+            DATE_FORMAT(a.fecha_nacimiento, '%d/%m/%Y') AS fecha_nacimiento,
             ae.nombre AS estado,
             c.nombre  AS curso,
             DATE_FORMAT(a.created_at, '%d/%m/%Y') AS fecha_solicitud,
@@ -282,7 +248,12 @@ async function consultarAspirantesEmpresaDetalle(filtro, params) {
      WHERE 1=1 ${filtro} ORDER BY e.nombre, a.nombre_completo`,
     params
   );
-  return filas;
+  return filas.map(f => ({
+    ...f,
+    numero_documento: descifrar(f.numero_documento) || '',
+    email:            descifrar(f.email)            || '',
+    telefono:         descifrar(f.telefono)         || '',
+  }));
 }
 
 module.exports = {
@@ -296,7 +267,6 @@ module.exports = {
   consultarEstadisticasSolicitudes,
   consultarEstadisticasGrupos,
   consultarAspirantesDetalle,
-  consultarDatosComplementariosAspirante,
   consultarMesesConDatos,
   consultarResumenEstados,
   consultarResumenCursos,

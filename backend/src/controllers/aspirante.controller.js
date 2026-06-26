@@ -43,7 +43,7 @@ async function listar(req, res) {
   try {
     const {
       buscar = '', estado = '', curso = '', curso_id = '', anio = '', mes = '',
-      nombre = '', empresa = '', nit = '', cc = '',
+      aspirante = '', empresa = '',
     } = req.query;
     const { limit, offset, pagina } = normalizarPaginacion(req.query);
 
@@ -57,20 +57,30 @@ async function listar(req, res) {
     if (curso_id) { filtros.push('s.curso_id = ?'); params.push(Number(curso_id)); }
     else if (curso) { filtros.push('c.nombre LIKE ?'); params.push(`%${curso}%`); }
 
-    // Filtros explícitos de nombre/empresa/NIT/CC (componente de filtros unificado).
-    if (nombre)  { filtros.push('a.nombre_completo LIKE ?'); params.push(`%${nombre}%`); }
-    if (empresa) { filtros.push('e.nombre LIKE ?'); params.push(`%${empresa}%`); }
-    if (nit)     { filtros.push('e.nit LIKE ?'); params.push(`%${nit}%`); }
-    if (cc) {
-      // El número de documento está cifrado con IV aleatorio: no admite LIKE.
-      // Se compara por hash determinístico, lo que exige coincidencia exacta.
-      const hash = hashBusqueda(cc);
-      filtros.push('a.numero_documento_hash = ?');
-      params.push(hash);
+    // Aspirante: una sola casilla busca por nombre o por cédula.
+    // Si el texto es puramente numérico se interpreta como número de
+    // documento (comparación exacta por hash, ya que está cifrado);
+    // si contiene letras se interpreta como nombre (LIKE).
+    if (aspirante) {
+      const esSoloNumeros = /^\d+$/.test(aspirante.trim());
+      if (esSoloNumeros) {
+        const hash = hashBusqueda(aspirante.trim());
+        filtros.push('a.numero_documento_hash = ?');
+        params.push(hash);
+      } else {
+        filtros.push('a.nombre_completo LIKE ?');
+        params.push(`%${aspirante}%`);
+      }
+    }
+
+    // Empresa: una sola casilla busca por nombre o por NIT a la vez.
+    if (empresa) {
+      filtros.push('(e.nombre LIKE ? OR e.nit LIKE ?)');
+      params.push(`%${empresa}%`, `%${empresa}%`);
     }
 
     // Compatibilidad retro: `buscar` sigue combinando nombre de aspirante o empresa.
-    if (!nombre && !empresa && !nit && buscar) {
+    if (!aspirante && !empresa && buscar) {
       filtros.push('(a.nombre_completo LIKE ? OR e.nombre LIKE ?)');
       params.push(`%${buscar}%`, `%${buscar}%`);
     }
@@ -183,24 +193,30 @@ async function preAprobar(req, res) {
       [CAT.aspEstado.PRE_APROBADO, req.usuario.id, id]
     );
 
-    const emailDescifrado = descifrar(aspirante.email);
-    const sinEmail = !emailDescifrado;
+    // La notificación de pre-aprobación se envía al SOLICITANTE (empresa),
+    // no al aspirante. El correo al aspirante solo ocurre al asignarlo a un grupo.
+    const [[solicitante]] = await pool.execute(
+      `SELECT e.id AS empresa_id, e.nombre AS empresa, e.email, e.nombre_contacto, c.nombre AS curso
+       FROM solicitud s
+       JOIN empresa e ON s.empresa_id = e.id
+       JOIN curso   c ON s.curso_id   = c.id
+       WHERE s.id = ?`,
+      [aspirante.solicitud_id]
+    );
 
-    if (emailDescifrado) {
-      const [[{ empresa, curso }]] = await pool.execute(
-        `SELECT e.nombre AS empresa, c.nombre AS curso
-         FROM solicitud s
-         JOIN empresa e ON s.empresa_id = e.id
-         JOIN curso   c ON s.curso_id   = c.id
-         WHERE s.id = ?`,
-        [aspirante.solicitud_id]
-      );
+    if (solicitante?.email) {
       enviarCorreoBackground({
-        tipo: 'APROBACION',
-        destinatario: emailDescifrado,
-        datos: { nombre: aspirante.nombre_completo, cursoRequerido: curso, empresa },
+        tipo: 'APROBACION_SOLICITANTE',
+        destinatario: solicitante.email,
+        datos: {
+          nombre:         aspirante.nombre_completo,
+          cursoRequerido: solicitante.curso,
+          empresa:        solicitante.empresa,
+          nombreContacto: solicitante.nombre_contacto || solicitante.empresa,
+        },
         usuarioId: req.usuario.id,
         aspiranteId: id,
+        empresaId: solicitante.empresa_id,
       });
     }
 
@@ -212,10 +228,10 @@ async function preAprobar(req, res) {
       }).catch(err => console.error('[auditoria:bg] preAprobar:', err.message));
     });
 
-    if (sinEmail) {
-      return res.json({ mensaje: 'Aspirante pre-aprobado. El aspirante no tiene correo registrado.', correoEnviado: false, sinEmail: true });
+    if (!solicitante?.email) {
+      return res.json({ mensaje: 'Aspirante pre-aprobado. El solicitante no tiene correo registrado.', correoEnviado: false, sinEmail: true });
     }
-    res.json({ mensaje: 'Aspirante pre-aprobado. Se envió correo de notificación.', correoEnviado: true });
+    res.json({ mensaje: 'Aspirante pre-aprobado. Se envió correo de notificación al solicitante.', correoEnviado: true });
   } catch (e) {
     handleError(res, e, 'preAprobar', 'Error al pre-aprobar aspirante');
   }
@@ -233,22 +249,36 @@ async function rechazar(req, res) {
     const [filas] = await pool.execute('SELECT * FROM aspirante WHERE id = ?', [id]);
     if (notFoundSi(res, filas)) return;
 
+    const aspirante = filas[0];
     const motivoLimpio = motivo.trim();
     await pool.execute(
       'UPDATE aspirante SET estado_id = ?, motivo_rechazo = ?, decision_por = ?, decision_en = NOW() WHERE id = ?',
       [CAT.aspEstado.RECHAZADO, motivoLimpio, req.usuario.id, id]
     );
 
-    const emailDescifrado = descifrar(filas[0].email);
-    const sinEmail = !emailDescifrado;
+    // La notificación de rechazo se envía al SOLICITANTE (empresa),
+    // no al aspirante.
+    const [[solicitante]] = await pool.execute(
+      `SELECT e.id AS empresa_id, e.nombre AS empresa, e.email, e.nombre_contacto
+       FROM solicitud s
+       JOIN empresa e ON s.empresa_id = e.id
+       WHERE s.id = ?`,
+      [aspirante.solicitud_id]
+    );
 
-    if (emailDescifrado) {
+    if (solicitante?.email) {
       enviarCorreoBackground({
-        tipo: 'RECHAZO',
-        destinatario: emailDescifrado,
-        datos: { nombre: filas[0].nombre_completo, motivo: motivoLimpio },
+        tipo: 'RECHAZO_SOLICITANTE',
+        destinatario: solicitante.email,
+        datos: {
+          nombre:         aspirante.nombre_completo,
+          motivo:         motivoLimpio,
+          empresa:        solicitante.empresa,
+          nombreContacto: solicitante.nombre_contacto || solicitante.empresa,
+        },
         usuarioId: req.usuario.id,
         aspiranteId: id,
+        empresaId: solicitante.empresa_id,
       });
     }
 
@@ -260,10 +290,10 @@ async function rechazar(req, res) {
       }).catch(err => console.error('[auditoria:bg] rechazar:', err.message));
     });
 
-    if (sinEmail) {
-      return res.json({ mensaje: 'Aspirante rechazado. El aspirante no tiene correo registrado.', correoEnviado: false, sinEmail: true });
+    if (!solicitante?.email) {
+      return res.json({ mensaje: 'Aspirante rechazado. El solicitante no tiene correo registrado.', correoEnviado: false, sinEmail: true });
     }
-    res.json({ mensaje: 'Aspirante rechazado. Notificación enviada.', correoEnviado: true });
+    res.json({ mensaje: 'Aspirante rechazado. Notificación enviada al solicitante.', correoEnviado: true });
   } catch (e) {
     handleError(res, e, 'rechazar', 'Error al rechazar aspirante');
   }
@@ -286,7 +316,7 @@ async function asignarAGrupo(req, res) {
 
     const [[grupo]] = await pool.execute(
       `SELECT g.id, g.nombre, g.cupo_maximo, g.fecha_inicio, g.fecha_fin,
-              g.curso_id,
+              g.curso_id, g.estado_id,
               COUNT(i.id)       AS inscritos,
               l.nombre          AS lugar_nombre,
               u.nombre_completo AS instructor_nombre,
@@ -307,11 +337,14 @@ async function asignarAGrupo(req, res) {
        ) ev_first ON ev_first.grupo_id = g.id
        WHERE g.id = ?
        GROUP BY g.id, g.nombre, g.cupo_maximo, g.fecha_inicio, g.fecha_fin,
-                g.curso_id, l.nombre, u.nombre_completo, c.nombre,
+                g.curso_id, g.estado_id, l.nombre, u.nombre_completo, c.nombre,
                 ev_first.hora_inicio, ev_first.hora_fin`,
       [grupo_id, grupo_id]
     );
     if (!grupo) return res.status(404).json({ error: 'Grupo no encontrado' });
+    if (grupo.estado_id === CAT.grpEstado.FINALIZADO) {
+      return res.status(400).json({ error: 'El grupo está finalizado y no admite nuevas asignaciones.' });
+    }
     if (Number(grupo.inscritos) >= Number(grupo.cupo_maximo)) {
       return res.status(400).json({ error: 'El grupo ya no tiene cupos disponibles' });
     }
@@ -389,6 +422,17 @@ async function desasignarDeGrupo(req, res) {
     const aspirante = filas[0];
     if (aspirante.estado_id !== CAT.aspEstado.ASIGNADO) {
       return res.status(400).json({ error: 'El aspirante no está asignado a ningún grupo' });
+    }
+
+    const [[inscripcion]] = await pool.execute(
+      `SELECT g.estado_id
+       FROM inscripcion i
+       JOIN grupo g ON i.grupo_id = g.id
+       WHERE i.aspirante_id = ?`,
+      [id]
+    );
+    if (inscripcion && inscripcion.estado_id === CAT.grpEstado.FINALIZADO) {
+      return res.status(400).json({ error: 'El grupo está finalizado y no admite cambios en sus aspirantes.' });
     }
 
     await pool.execute('DELETE FROM inscripcion WHERE aspirante_id = ?', [id]);

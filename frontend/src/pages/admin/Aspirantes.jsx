@@ -14,14 +14,14 @@ import FiltrosBar        from '../../components/common/FiltrosBar.jsx';
 import Icon from '../../components/common/Icon.jsx';
 import { ASP_ESTADOS_SELECT, API_BASE } from '../../constants/index.js';
 
-const CAMPOS_FILTRO = ['nombre', 'empresa', 'nit', 'cc', 'curso', 'estado', 'anio', 'mes'];
+const CAMPOS_FILTRO = ['aspirante', 'empresa', 'curso', 'estado', 'anio', 'mes'];
 
 const ESTADO_ACCION = {
   PENDIENTE:    { label: 'Pendientes',    color: '#e05500', acciones: ['pre-aprobar', 'rechazar'] },
   PRE_APROBADO: { label: 'Pre-aprobados', color: '#FF6719', acciones: ['asignar'] },
 };
 
-const FILTROS_INICIAL = { nombre: '', empresa: '', nit: '', cc: '', estado: '', curso_id: '', anio: '', mes: '' };
+const FILTROS_INICIAL = { aspirante: '', empresa: '', estado: '', curso_id: '', anio: '', mes: '' };
 const LIMITE = 25;
 
 export default function Aspirantes() {
@@ -60,14 +60,12 @@ export default function Aspirantes() {
     setCargando(true);
     try {
       const params = { limit: LIMITE, page: pagina };
-      if (filtros.nombre)   params.nombre   = filtros.nombre;
-      if (filtros.empresa)  params.empresa  = filtros.empresa;
-      if (filtros.nit)      params.nit      = filtros.nit;
-      if (filtros.cc)       params.cc       = filtros.cc;
-      if (filtros.estado)   params.estado   = filtros.estado;
-      if (filtros.curso_id) params.curso_id = filtros.curso_id;
-      if (filtros.anio)     params.anio     = filtros.anio;
-      if (filtros.mes)      params.mes      = filtros.mes;
+      if (filtros.aspirante) params.aspirante = filtros.aspirante;
+      if (filtros.empresa)   params.empresa   = filtros.empresa;
+      if (filtros.estado)    params.estado    = filtros.estado;
+      if (filtros.curso_id)  params.curso_id  = filtros.curso_id;
+      if (filtros.anio)      params.anio      = filtros.anio;
+      if (filtros.mes)       params.mes       = filtros.mes;
 
       const { data } = await AspiranteService.listar(params);
       setAspirantes(data.aspirantes || []);
@@ -97,9 +95,9 @@ export default function Aspirantes() {
       if (data?.correoError) {
         toast('Aspirante pre-aprobado, pero hubo un error al enviar el correo: ' + data.correoError, 'warn');
       } else if (data?.sinEmail) {
-        toast('Aspirante pre-aprobado. No tiene correo registrado, no se envió notificación.', 'warn');
+        toast('Aspirante pre-aprobado. El solicitante no tiene correo registrado, no se envió notificación.', 'warn');
       } else {
-        toast('Aspirante pre-aprobado. Notificación enviada por correo.', 'sena');
+        toast('Aspirante pre-aprobado. Notificación enviada al solicitante por correo.', 'sena');
       }
     } catch (e) {
       actualizarEstadoLocal(id, 'PENDIENTE');
@@ -328,7 +326,6 @@ export default function Aspirantes() {
         onChange={f}
         onLimpiar={limpiar}
         cursos={cursos}
-        labelBusquedaNombre="Aspirante"
       />
 
       <div className="card">

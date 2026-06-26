@@ -12,11 +12,11 @@ import { formatearFecha } from "../../utils/fecha.js";
 import ModalSolicitud from "../../components/solicitudes/ModalSolicitud.jsx";
 
 const LIMITE = 25;
-const CAMPOS_FILTRO = ["nombre", "nit", "estadoSolicitud", "anio", "mes"];
+const CAMPOS_FILTRO = ["empresa", "tipoEntidad", "estadoSolicitud", "anio", "mes"];
 const FILTROS_INICIAL = {
   estado_solicitud: "",
-  nombre: "",
-  nit: "",
+  empresa: "",
+  tipo_entidad: "",
   anio: "",
   mes: "",
 };
@@ -76,7 +76,6 @@ export default function Solicitudes() {
         valores={filtros}
         onChange={f}
         onLimpiar={limpiar}
-        labelBusquedaNombre="Empresa"
       />
 
       <div className="card">

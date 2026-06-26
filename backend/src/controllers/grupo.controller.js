@@ -191,6 +191,18 @@ async function actualizar(req, res) {
 
   const conn = await pool.getConnection();
   try {
+    const [[grupoActual]] = await conn.execute(
+      'SELECT estado_id FROM grupo WHERE id = ? AND deleted_at IS NULL', [req.params.id]
+    );
+    if (!grupoActual) {
+      conn.release();
+      return res.status(404).json({ error: 'Grupo no encontrado' });
+    }
+    if (grupoActual.estado_id === CAT.grpEstado.FINALIZADO) {
+      conn.release();
+      return res.status(400).json({ error: 'El grupo está finalizado y no admite modificaciones.' });
+    }
+
     await conn.beginTransaction();
     await conn.execute(
       `UPDATE grupo

@@ -17,9 +17,9 @@ export default function ModalRechazo({ aspirante, onClose, onDone }) {
       if (data?.correoError) {
         toast('Aspirante rechazado, pero hubo un error al enviar el correo: ' + data.correoError, 'warn');
       } else if (data?.sinEmail) {
-        toast('Aspirante rechazado. No tiene correo registrado, no se envió notificación.', 'warn');
+        toast('Aspirante rechazado. El solicitante no tiene correo registrado, no se envió notificación.', 'warn');
       } else {
-        toast('Aspirante rechazado. Se envió correo de notificación.', 'sena');
+        toast('Aspirante rechazado. Se envió correo de notificación al solicitante.', 'sena');
       }
       onDone();
     } catch (e) {
@@ -32,7 +32,7 @@ export default function ModalRechazo({ aspirante, onClose, onDone }) {
       <div className="modal">
         <div className="modal-title">Rechazar aspirante</div>
         <div className={`alert alert-warn ${s['alert-mb']}`}>
-          Rechazando a <strong>{aspirante.nombre_completo}</strong>. Se enviará un correo automático con el motivo.
+          Rechazando a <strong>{aspirante.nombre_completo}</strong>. Se enviará un correo automático con el motivo al solicitante.
         </div>
         <div className="form-group">
           <label>Motivo del rechazo <span className="required">*</span></label>

@@ -47,6 +47,12 @@ export async function descargarInformeGrupo(grupoRow, toast, GrupoService) {
     const g    = resp?.data;
     if (!g) { toast('No se pudo cargar el grupo', 'danger'); return; }
 
+    const inscritos = g.aspirantes?.length ?? 0;
+    if (inscritos === 0) {
+      toast('El grupo no tiene aspirantes inscritos. No hay nada para descargar.', 'warn');
+      return;
+    }
+
     const fechaInicioFmt = formatearFecha(g.fecha_inicio) || '—';
     const fechaFinFmt    = formatearFecha(g.fecha_fin) || '—';
 

@@ -27,7 +27,7 @@ export default function Cursos() {
       if (filtros.anio) params.anio = filtros.anio;
       if (filtros.mes)  params.mes  = filtros.mes;
       const { data } = mostrarInactivos
-        ? await CursoService.listarTodos(params)
+        ? await CursoService.listarInactivos(params)
         : await CursoService.listar(params);
       setCursos(data);
     } catch (e) {
@@ -87,7 +87,7 @@ export default function Cursos() {
     <div>
       <div className="page-header">
         <div>
-          <p>{cursosVisibles} curso{cursosVisibles !== 1 ? 's' : ''} {mostrarInactivos ? 'en total' : 'activo' + (cursosVisibles !== 1 ? 's' : '')}</p>
+          <p>{cursosVisibles} curso{cursosVisibles !== 1 ? 's' : ''} {mostrarInactivos ? 'inactivo' + (cursosVisibles !== 1 ? 's' : '') : 'activo' + (cursosVisibles !== 1 ? 's' : '')}</p>
         </div>
         <div className={s.headerAcciones}>
           <button

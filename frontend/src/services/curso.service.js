@@ -4,7 +4,7 @@ import api from './api';
 const CursoService = {
   listar: (params) => api.get('/cursos', { params }),
 
-  listarTodos: (params) => api.get('/cursos', { params: { ...params, todos: '1' } }),
+  listarInactivos: (params) => api.get('/cursos', { params: { ...params, inactivos: '1' } }),
 
   crear: (form) => api.post('/cursos', form),
 

@@ -16,7 +16,6 @@ const {
   pdfCheckPageBreak,
   pdfStatGrid,
   pdfFooter,
-  generarPdfAspirante,
 } = require('../services/reporte.pdf.service');
 
 const {
@@ -68,10 +67,26 @@ async function resumen(req, res) {
        GROUP BY e.id ORDER BY aspirantes DESC LIMIT 8`,
       fAsp.params
     );
+    // Ranking estadístico de empresas por número de SOLICITUDES (no de
+    // aspirantes individuales), para apoyar análisis y toma de decisiones
+    // sobre qué empresas generan más demanda de cupos.
+    const fSolResumen = construirFiltroPeriodo(anio, mes, 's.created_at');
+    const [empresasRankingSolicitudes] = await pool.execute(
+      `SELECT e.nombre, e.nit, e.tipo_entidad,
+              COUNT(DISTINCT s.id) AS total_solicitudes,
+              COUNT(a.id)          AS total_aspirantes
+       FROM empresa    e
+       JOIN solicitud  s ON s.empresa_id   = e.id
+       LEFT JOIN aspirante a ON a.solicitud_id = s.id
+       WHERE 1=1 ${fSolResumen.filtro}
+       GROUP BY e.id ORDER BY total_solicitudes DESC, total_aspirantes DESC LIMIT 15`,
+      fSolResumen.params
+    );
 
     res.json({
       aspirantes: asp, grupos: grp,
       cursosPopulares: cursos, empresasTop: empresas,
+      empresasRankingSolicitudes,
       periodo: { anio: anio || 'Todos', mes: mes || 'Todos' },
     });
   } catch (e) {
@@ -204,29 +219,6 @@ async function exportarPDF(req, res) {
   } catch (e) {
     console.error(`[reporte.exportarPDF tipo=${tipo}]`, e.message);
     if (!res.headersSent) res.status(500).json({ error: 'Error al generar PDF.' });
-  }
-}
-
-async function exportarPdfAspirante(req, res) {
-  const { id } = req.params;
-  try {
-    const aspirantes = await ReporteData.consultarAspirantesDetalle(
-      'AND a.id = ?',
-      [id]
-    );
-    if (!aspirantes.length) {
-      return res.status(404).json({ error: 'Aspirante no encontrado.' });
-    }
-    const asp    = aspirantes[0];
-    const extra  = await ReporteData.consultarDatosComplementariosAspirante(asp.id);
-    const buffer = await generarPdfAspirante(asp, extra);
-    const nombre = `Expediente_${nombreSeguro(asp.nombre_completo)}.pdf`;
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="${nombre}"`);
-    res.send(buffer);
-  } catch (e) {
-    console.error('[reporte.exportarPdfAspirante]', e.message);
-    if (!res.headersSent) res.status(500).json({ error: 'Error al generar PDF del aspirante.' });
   }
 }
 
@@ -378,6 +370,16 @@ async function exportarZipGrupo(req, res) {
       return res.status(403).json({ error: 'No tienes permiso para descargar el reporte de este grupo.' });
     }
 
+    // Evita generar/descargar un ZIP vacío (solo README) cuando el grupo
+    // todavía no tiene aspirantes inscritos.
+    const [[{ totalInscritos }]] = await pool.execute(
+      'SELECT COUNT(*) AS totalInscritos FROM inscripcion WHERE grupo_id = ?',
+      [grupo.id]
+    );
+    if (totalInscritos === 0) {
+      return res.status(404).json({ error: 'El grupo no tiene aspirantes inscritos. No hay nada para exportar.' });
+    }
+
     const nombreZip = `Mayzer_${nombreSeguro(grupo.nombre)}.zip`;
     res.setHeader('Content-Type', 'application/zip');
     res.setHeader('Content-Disposition', `attachment; filename="${nombreZip}"`);
@@ -407,6 +409,6 @@ async function exportarZipGrupo(req, res) {
 }
 
 module.exports = {
-  resumen, exportarExcel, exportarPDF, exportarPdfAspirante,
+  resumen, exportarExcel, exportarPDF,
   exportarZipAnual, exportarZipMisGrupos, exportarZipGrupo,
 };

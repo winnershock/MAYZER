@@ -16,7 +16,7 @@ export default function ModalTodosInstructores({
       <div className={`modal modal-lg ${s.modalSeleccion}`}>
         <div className="modal-title">Todos los instructores registrados</div>
         <p className={s.modalSeleccionSubtitle}>
-          {total} instructor{total !== 1 ? 'es' : ''} en total — sin filtros de mes ni estado.
+          {total} instructor{total !== 1 ? 'es' : ''} en total — incluye quienes no tienen grupos en el mes seleccionado.
         </p>
         <table>
           <thead>
@@ -26,7 +26,6 @@ export default function ModalTodosInstructores({
               <th>Especialidad</th>
               <th className={s.colCentro}>Exp.</th>
               <th>Horas / máx.</th>
-              <th className={s.colCentro}>Estado</th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -44,11 +43,6 @@ export default function ModalTodosInstructores({
                     asignadas={Number(i.horas_asignadas) || 0}
                     maximas={Number(i.horas_maximas) || 40}
                   />
-                </td>
-                <td className={s.celdaBadge}>
-                  <span className={`badge ${i.activo ? 'badge-success' : 'badge-danger'}`}>
-                    {i.activo ? 'Activo' : 'Inactivo'}
-                  </span>
                 </td>
                 <td>
                   <div className={`td-actions ${s.tdAccionesSel}`}>

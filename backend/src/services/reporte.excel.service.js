@@ -152,15 +152,20 @@ function obtenerConfigExcel(tipo, filas) {
       };
     case 'aspirantes_empresa':
       return {
-        encabezados: ['Nombre Completo', 'Tipo Doc.', 'Estado', 'Curso Solicitado', 'Fecha Solicitud',
+        encabezados: ['Primer Nombre', 'Segundo Nombre', 'Primer Apellido', 'Segundo Apellido',
+                      'Tipo Doc.', 'N.° Documento', 'Email Aspirante', 'Teléfono Aspirante',
+                      'Fecha Nacimiento', 'Estado', 'Curso Solicitado', 'Fecha Solicitud',
                       'Grupo Asignado', 'Empresa', 'NIT', 'Tipo Entidad', 'Email Empresa',
                       'Teléfono Empresa', 'Contacto', 'Cargo Contacto', 'Dirección', 'Ciudad', 'Departamento'],
-        datos: filas.map(r => [r.nombre_completo, r.tipo_documento, r.estado, r.curso, r.fecha_solicitud,
+        datos: filas.map(r => [r.nombre1 || '—', r.nombre2 || '—', r.apellido1 || '—', r.apellido2 || '—',
+                               r.tipo_documento, r.numero_documento || '—',
+                               r.email || '—', r.telefono || '—', r.fecha_nacimiento || '—',
+                               r.estado, r.curso, r.fecha_solicitud,
                                r.grupo_asignado || '—', r.empresa, r.nit, r.tipo_entidad,
                                r.empresa_email, r.empresa_telefono || '—',
                                r.nombre_contacto || '—', r.cargo_contacto || '—',
                                r.direccion || '—', r.ciudad || '—', r.departamento || '—']),
-        anchos: [28, 10, 14, 22, 14, 20, 22, 14, 14, 24, 14, 20, 18, 24, 16, 16],
+        anchos: [16, 16, 16, 16, 10, 16, 24, 14, 14, 14, 22, 14, 20, 22, 14, 14, 24, 14, 20, 18, 24, 16, 16],
       };
     default:
       return null;

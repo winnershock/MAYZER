@@ -6,7 +6,7 @@ import s from './ModalInstructor.module.css';
 const VACIO = {
   nombre_completo: '', email: '', nombre_usuario: '', contrasena: '',
   especialidad: '', experiencia_anios: 0, horas_maximas: 40, telefono: '',
-  color: '', activo: true,
+  color: '',
 };
 
 export default function ModalInstructor({ onClose, onDone, base, modo = 'crear' }) {
@@ -24,7 +24,6 @@ export default function ModalInstructor({ onClose, onDone, base, modo = 'crear' 
       horas_maximas:     base.horas_maximas    || 40,
       telefono:          base.telefono         || '',
       color:             base.color            || '',
-      activo:            base.activo !== false,
     };
   });
 
@@ -43,6 +42,11 @@ export default function ModalInstructor({ onClose, onDone, base, modo = 'crear' 
     }
     if (!esEdicion && (!form.nombre_usuario || !form.contrasena)) {
       toast('Usuario y contraseña son obligatorios', 'warn');
+      return;
+    }
+    const contrasenaEscrita = form.contrasena.trim();
+    if (contrasenaEscrita.length > 0 && contrasenaEscrita.length < 8) {
+      toast('La contraseña debe tener al menos 8 caracteres', 'warn');
       return;
     }
     setCargando(true);
@@ -120,7 +124,7 @@ export default function ModalInstructor({ onClose, onDone, base, modo = 'crear' 
             <div className="form-group form-full">
               <label>Nueva contraseña <span className={s['label-opcional']}>(opcional)</span></label>
               <input type="password" name="contrasena" value={form.contrasena} onChange={cambiar}
-                placeholder="Dejar vacío para no cambiar" autoComplete="new-password" />
+                placeholder="Dejar vacío para no cambiar (mín. 8 caracteres)" autoComplete="new-password" />
             </div>
           )}
 
@@ -140,15 +144,6 @@ export default function ModalInstructor({ onClose, onDone, base, modo = 'crear' 
               onChange={cambiar} min="1" max="60" />
           </div>
 
-          {esEdicion && (
-            <div className={`form-group ${s['form-check-row']}`}>
-              <label className={s['label-inline']}>
-                <input type="checkbox" name="activo" checked={!!form.activo} onChange={cambiar}
-                  className={s['input-check']} />
-                Instructor activo
-              </label>
-            </div>
-          )}
           <div className="form-group">
             <label>Color del instructor</label>
             <div className={s['color-row']}>

@@ -5,7 +5,6 @@ const XLSX     = require('xlsx-js-style');
 const { construirFiltroPeriodo }   = require('../utils/db.utils');
 const { NOMBRES_MES: MESES }       = require('../utils/formato.utils');
 const ReporteData                  = require('./reporte.service');
-const { generarPdfAspirante }      = require('./reporte.pdf.service');
 const { construirExcelMensual }    = require('./reporte.excel.service');
 
 const UPLOADS_DIR = path.join(__dirname, '../../uploads/documentos');
@@ -37,7 +36,6 @@ function generarReadmeZip(anioNum, mesNum, mesesAProcesar) {
     `  Mes_XX_Nombre/`,
     `    Aspirantes_Mes.xlsx      → Lista completa + estadísticas del mes`,
     `    Nombre_Apellido_ID/`,
-    `      Expediente_Nombre.pdf  → Expediente profesional del aspirante`,
     `      Documento_Original.pdf → Documento adjunto al momento del registro`,
     ``,
     `MESES INCLUIDOS: ${mesesAProcesar.map(m => MESES[m]).join(', ')}`,
@@ -65,19 +63,8 @@ async function procesarMesParaZip(archive, anioNum, mNum) {
   archive.append(bufXlsx, { name: `${carpetaMes}/Aspirantes_${mesNombre}_${anioNum}.xlsx` });
 
   for (const asp of aspirantes) {
-    const extra      = await ReporteData.consultarDatosComplementariosAspirante(asp.id);
     const nombreAsp  = nombreSeguro(asp.nombre_completo);
     const carpetaAsp = `${carpetaMes}/${nombreAsp}_${asp.id}`;
-
-    try {
-      const bufPdf = await generarPdfAspirante(asp, extra);
-      archive.append(bufPdf, { name: `${carpetaAsp}/Expediente_${nombreAsp}.pdf` });
-    } catch (pdfErr) {
-      console.error(`[ZIP] Error generando PDF aspirante ${asp.id}:`, pdfErr.message);
-      archive.append(`Error al generar expediente: ${pdfErr.message}`, {
-        name: `${carpetaAsp}/ERROR_expediente.txt`,
-      });
-    }
 
     if (asp.documento_pdf) {
       const rutaDoc = path.join(UPLOADS_DIR, asp.documento_pdf);
@@ -130,19 +117,8 @@ async function procesarGruposParaZip(archive, anioNum, mesNum, gruposIds) {
     archive.append(bufXlsx, { name: `${carpetaGrupo}/Aspirantes_${nombreSeguro(nombreGrupo)}.xlsx` });
 
     for (const asp of lista) {
-      const extra      = await ReporteData.consultarDatosComplementariosAspirante(asp.id);
       const nombreAsp  = nombreSeguro(asp.nombre_completo);
       const carpetaAsp = `${carpetaGrupo}/${nombreAsp}_${asp.id}`;
-
-      try {
-        const bufPdf = await generarPdfAspirante(asp, extra);
-        archive.append(bufPdf, { name: `${carpetaAsp}/Expediente_${nombreAsp}.pdf` });
-      } catch (pdfErr) {
-        console.error(`[ZIP-instructor] Error generando PDF aspirante ${asp.id}:`, pdfErr.message);
-        archive.append(`Error al generar expediente: ${pdfErr.message}`, {
-          name: `${carpetaAsp}/ERROR_expediente.txt`,
-        });
-      }
 
       if (asp.documento_pdf) {
         const rutaDoc = path.join(UPLOADS_DIR, asp.documento_pdf);

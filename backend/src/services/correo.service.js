@@ -164,6 +164,57 @@ const plantillas = {
     <p style="margin:20px 0 0 0;color:#555555;font-size:14px;font-family:Arial,sans-serif;">Cordialmente,<br><strong>Mayra &ndash; Administradora SENA Palmira</strong></p>
   `),
 
+  APROBACION_SOLICITANTE: d => wrapHTML(`
+    <div style="text-align:center;margin-bottom:24px;">
+      <div style="display:inline-block;background:#e8f5e9;border-radius:50%;width:56px;height:56px;line-height:56px;font-size:28px;">✅</div>
+    </div>
+    <h2 style="margin:0 0 8px 0;color:#2e7d32;font-size:20px;font-family:Arial,sans-serif;text-align:center;">Aspirante pre-aprobado/a</h2>
+    <p style="margin:0 0 20px 0;color:#666666;font-size:13px;font-family:Arial,sans-serif;text-align:center;">Le informamos el resultado de la revisión de uno de sus aspirantes.</p>
+
+    <p style="margin:0 0 8px 0;color:#333333;font-size:14px;font-family:Arial,sans-serif;">Estimado/a <strong>${d.nombreContacto}</strong>,</p>
+    <p style="margin:0 0 16px 0;color:#555555;font-size:14px;font-family:Arial,sans-serif;line-height:1.6;">
+      Nos complace informarle que la solicitud de formación complementaria del aspirante <strong>${d.nombre}</strong>, postulado por <strong>${d.empresa}</strong>, ha sido <strong style="color:#2e7d32;">pre-aprobada</strong> por el equipo del SENA sede Palmira.
+    </p>
+
+    ${cajaInfo([
+      { label: 'Aspirante',        valor: d.nombre },
+      { label: 'Curso solicitado', valor: d.cursoRequerido },
+    ])}
+
+    <p style="margin:16px 0 0 0;color:#555555;font-size:14px;font-family:Arial,sans-serif;line-height:1.6;">
+      En breve enviaremos un nuevo correo con los detalles del grupo asignado, horarios e información sobre el inicio de la formación.
+    </p>
+    <p style="margin:20px 0 0 0;color:#555555;font-size:14px;font-family:Arial,sans-serif;">Cordialmente,<br><strong>Mayra &ndash; Administradora SENA Palmira</strong></p>
+  `),
+
+  RECHAZO_SOLICITANTE: d => wrapHTML(`
+    <div style="text-align:center;margin-bottom:24px;">
+      <div style="display:inline-block;background:#fce8e8;border-radius:50%;width:56px;height:56px;line-height:56px;font-size:28px;">❌</div>
+    </div>
+    <h2 style="margin:0 0 8px 0;color:#c62828;font-size:20px;font-family:Arial,sans-serif;text-align:center;">Aspirante no aprobado/a</h2>
+    <p style="margin:0 0 20px 0;color:#666666;font-size:13px;font-family:Arial,sans-serif;text-align:center;">Le informamos el resultado de la revisión de uno de sus aspirantes.</p>
+
+    <p style="margin:0 0 8px 0;color:#333333;font-size:14px;font-family:Arial,sans-serif;">Estimado/a <strong>${d.nombreContacto}</strong>,</p>
+    <p style="margin:0 0 16px 0;color:#555555;font-size:14px;font-family:Arial,sans-serif;line-height:1.6;">
+      Lamentamos informarle que la solicitud de formación complementaria del aspirante <strong>${d.nombre}</strong>, postulado por <strong>${d.empresa}</strong>, no ha podido ser aprobada en esta oportunidad.
+    </p>
+
+    <table cellpadding="0" cellspacing="0" border="0" width="100%"
+      style="background-color:#fff4f4;border:1px solid #ffcdd2;border-left:4px solid #c62828;border-radius:8px;margin:20px 0;overflow:hidden;">
+      <tr>
+        <td style="padding:16px 20px;">
+          <p style="margin:0 0 6px 0;color:#c62828;font-size:12px;font-family:Arial,sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:1px;">Motivo de no aprobación</p>
+          <p style="margin:0;color:#333333;font-size:14px;font-family:Arial,sans-serif;line-height:1.6;">${d.motivo}</p>
+        </td>
+      </tr>
+    </table>
+
+    <p style="margin:16px 0 0 0;color:#555555;font-size:14px;font-family:Arial,sans-serif;line-height:1.6;">
+      Si desea mayor información o considera que existe un error, puede comunicarse directamente con nuestra oficina en la SENA sede Palmira.
+    </p>
+    <p style="margin:20px 0 0 0;color:#555555;font-size:14px;font-family:Arial,sans-serif;">Cordialmente,<br><strong>Mayra &ndash; Administradora SENA Palmira</strong></p>
+  `),
+
   ASIGNACION: d => wrapHTML(`
     <div style="text-align:center;margin-bottom:24px;">
       <div style="display:inline-block;background:#e8f0fe;border-radius:50%;width:56px;height:56px;line-height:56px;font-size:28px;">📚</div>
@@ -213,6 +264,8 @@ async function enviarCorreo({ tipo, destinatario, datos, asunto, usuarioId, aspi
   const asuntoFinal = asunto || {
     APROBACION: `[SENA Palmira] Pre-aprobación – ${datos.cursoRequerido || ''}`,
     RECHAZO:    `[SENA Palmira] Respuesta a su solicitud`,
+    APROBACION_SOLICITANTE: `[SENA Palmira] Aspirante pre-aprobado – ${datos.nombre || ''}`,
+    RECHAZO_SOLICITANTE:    `[SENA Palmira] Respuesta sobre el aspirante ${datos.nombre || ''}`,
     ASIGNACION: `[SENA Palmira] Asignación al curso ${datos.curso || ''}`,
     GENERAL:    datos.titulo || '[SENA Palmira] Información importante',
   }[tipo] || '[SENA Palmira] Notificación';

@@ -170,17 +170,18 @@ export default function Grupos() {
                       </button>
 
                       <button
-                        title="Descargar informe Excel del grupo"
+                        title={Number(g.inscritos) === 0 ? 'El grupo no tiene aspirantes inscritos' : 'Descargar informe Excel del grupo'}
                         className={`${s.btnAccion} ${s.btnExcel}`}
+                        disabled={Number(g.inscritos) === 0}
                         onClick={() => descargarInformeGrupo(g, toast, GrupoService)}
                       >
                         <Icon name="download" size={11} /> Excel
                       </button>
 
                       <button
-                        title="Descargar ZIP con expedientes del grupo"
+                        title={Number(g.inscritos) === 0 ? 'El grupo no tiene aspirantes inscritos' : 'Descargar ZIP con expedientes del grupo'}
                         className={`${s.btnAccion} ${s.btnExcel}`}
-                        disabled={descargandoZip === g.id}
+                        disabled={descargandoZip === g.id || Number(g.inscritos) === 0}
                         onClick={() => descargarZipDelGrupo(g)}
                       >
                         <Icon name="download" size={11} /> {descargandoZip === g.id ? '...' : 'ZIP'}
@@ -189,16 +190,18 @@ export default function Grupos() {
                       {esAdmin && (
                         <>
                           <button
-                            title="Administrar aspirantes"
+                            title={g.estado === 'FINALIZADO' ? 'Grupo finalizado: no admite gestión de aspirantes' : 'Administrar aspirantes'}
                             className={`${s.btnAccion} ${s.btnGestionar}`}
+                            disabled={g.estado === 'FINALIZADO'}
                             onClick={() => setModal({ tipo: 'administrar', id: g.id })}
                           >
                             <Icon name="settings" size={11} /> Gestionar
                           </button>
 
                           <button
-                            title="Editar grupo"
+                            title={g.estado === 'FINALIZADO' ? 'Grupo finalizado: no admite edición' : 'Editar grupo'}
                             className={`${s.btnAccion} ${s.btnEditar}`}
+                            disabled={g.estado === 'FINALIZADO'}
                             onClick={() => setModal({ tipo: 'editar', grupo: g })}
                           >
                             <Icon name="edit" size={11} /> Editar

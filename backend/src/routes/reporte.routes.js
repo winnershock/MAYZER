@@ -19,6 +19,5 @@ router.get('/resumen',              reporteCtrl.resumen);
 router.get('/exportar/excel',       reporteCtrl.exportarExcel);
 router.get('/exportar/pdf',         reporteCtrl.exportarPDF);
 router.get('/exportar/zip',         reporteCtrl.exportarZipAnual);
-router.get('/aspirantes/:id/pdf',   reporteCtrl.exportarPdfAspirante);
 
 module.exports = router;

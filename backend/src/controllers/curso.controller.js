@@ -18,10 +18,10 @@ async function tieneGruposFinalizados(cursoId) {
 async function listar(req, res) {
   try {
     const { anio, mes } = req.query;
-    const soloActivos = req.query.todos !== '1';
-    let condicion = soloActivos
-      ? 'WHERE deleted_at IS NULL AND activo = 1'
-      : 'WHERE deleted_at IS NULL';
+    const soloInactivos = req.query.inactivos === '1';
+    let condicion = soloInactivos
+      ? 'WHERE deleted_at IS NULL AND activo = 0'
+      : 'WHERE deleted_at IS NULL AND activo = 1';
 
     const params = [];
     const periodo = construirFiltroPeriodo(anio, mes, 'created_at');

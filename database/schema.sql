@@ -54,7 +54,16 @@ CREATE TABLE inscripcion_estado (
 CREATE TABLE correo_tipo (
   id     TINYINT UNSIGNED PRIMARY KEY,
   nombre VARCHAR(50) NOT NULL UNIQUE
-) ENGINE=InnoDB COMMENT='Tipos de correo electrónico gestionados por el sistema';
+) ENGINE=InnoDB COMMENT='Tipos de correo electrónico gestionados por el sistema (ver CAT.correoTipo en config/db.js)';
+
+INSERT INTO correo_tipo (id, nombre) VALUES
+  (1, 'APROBACION'),
+  (2, 'RECHAZO'),
+  (3, 'ASIGNACION'),
+  (4, 'INFORMACION_CURSO'),
+  (5, 'GENERAL'),
+  (6, 'APROBACION_SOLICITANTE'),
+  (7, 'RECHAZO_SOLICITANTE');
 
 -- ── Usuarios y autenticación ─────────────────────────────────────────────
 
@@ -128,7 +137,7 @@ CREATE TABLE instructor (
   horas_maximas     INT  NOT NULL DEFAULT 40,
   telefono          VARCHAR(50),
   color             VARCHAR(20) NULL DEFAULT NULL,
-  activo            BOOLEAN NOT NULL DEFAULT TRUE,
+  activo            BOOLEAN NOT NULL DEFAULT TRUE COMMENT 'No editable vía API: el estado real del instructor se determina por deleted_at + usuario.activo (ver instructor.controller.js)',
   created_at        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   deleted_at        TIMESTAMP NULL,

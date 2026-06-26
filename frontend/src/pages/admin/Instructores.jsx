@@ -32,7 +32,7 @@ export default function Instructores() {
   const cargar = useCallback(async () => {
     try {
       const [ri, rg] = await Promise.all([
-        InstructorService.listar(),
+        InstructorService.listar({ anio: historialAnio, mes: historialMes + 1 }),
         GrupoService.listar({ limit: 500 }),
       ]);
       setInstructores(ri.data);
@@ -41,7 +41,7 @@ export default function Instructores() {
     } catch {
       toast('Error al cargar datos', 'danger');
     }
-  }, [toast]);
+  }, [toast, historialAnio, historialMes]);
 
   useEffect(() => { cargar(); }, [cargar]);
 
@@ -177,13 +177,16 @@ export default function Instructores() {
                   <th>Email</th>
                   <th>Especialidad</th>
                   <th>Exp.</th>
-                  <th>Horas / máx.</th>
+                  <th>
+                    Horas / máx. · <span className={s.thGruposLabel}>
+                      {MESES[historialMes]}
+                    </span>
+                  </th>
                   <th className={s.colCentro}>
                     Grupos · <span className={s.thGruposLabel}>
                       {MESES[historialMes]} {historialAnio}
                     </span>
                   </th>
-                  <th className={s.colCentro}>Estado</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
@@ -208,7 +211,6 @@ export default function Instructores() {
                         </td>
                         <td>
                           <strong>{i.nombre_completo}</strong>
-                          {!i.activo && <span className={s.badgeInactivo}>inactivo</span>}
                         </td>
                         <td className={s.celdaEmail}>{i.email}</td>
                         <td className={s.celdaEsp}>{i.especialidad || '–'}</td>
@@ -224,11 +226,6 @@ export default function Instructores() {
                         <td className={s.celdaBadge}>
                           <span className={`badge badge-info ${s.badgeCursor}`}>
                             {gsDelMes.length} grupo{gsDelMes.length !== 1 ? 's' : ''}
-                          </span>
-                        </td>
-                        <td className={s.celdaBadge}>
-                          <span className={`badge ${i.activo ? 'badge-success' : 'badge-danger'}`}>
-                            {i.activo ? 'Activo' : 'Inactivo'}
                           </span>
                         </td>
                         <td onClick={e => e.stopPropagation()}>
@@ -261,7 +258,7 @@ export default function Instructores() {
                             <span className={s.grupoNombre}>{g.nombre}</span>
                           </td>
                           <td className={s.grupoCurso}>{g.curso_nombre}</td>
-                          <td colSpan={2} className={s.grupoFechas}>
+                          <td className={s.grupoFechas}>
                             {formatearFecha(g.fecha_inicio)} → {formatearFecha(g.fecha_fin)}
                           </td>
                           <td className={s.celdaBadge}>

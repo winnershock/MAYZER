@@ -4,6 +4,19 @@ const { handleError } = require('../utils/response.utils');
 
 async function listar(req, res) {
   try {
+    const { anio, mes } = req.query;
+    // Si se recibe un período, las horas asignadas se acotan a los eventos
+    // cuyo rango de fechas se solape con ese mes (igual que la columna
+    // "Grupos" ya hace en el frontend con solapaCon()). Sin período, se
+    // mantiene el total histórico acumulado (comportamiento por defecto).
+    let condicionPeriodo = '';
+    const paramsPeriodo = [];
+    if (anio && mes) {
+      condicionPeriodo = 'AND ev.fecha_inicio <= LAST_DAY(?) AND ev.fecha_fin >= ?';
+      const mesNum = String(mes).padStart(2, '0');
+      paramsPeriodo.push(`${anio}-${mesNum}-01`, `${anio}-${mesNum}-01`);
+    }
+
     const [filas] = await pool.execute(
       `SELECT ins.id, ins.especialidad, ins.experiencia_anios, ins.horas_maximas, ins.activo, ins.telefono, ins.color,
               u.id AS usuario_id, u.nombre_completo, u.nombre_usuario, u.email,
@@ -13,10 +26,11 @@ async function listar(req, res) {
        JOIN usuario u ON ins.usuario_id = u.id
        LEFT JOIN grupo ga ON ga.instructor_id = ins.id AND ga.estado_id IN (1,2) AND ga.deleted_at IS NULL
        LEFT JOIN grupo gh ON gh.instructor_id = ins.id AND gh.deleted_at IS NULL
-       LEFT JOIN evento ev ON ev.grupo_id = gh.id
+       LEFT JOIN evento ev ON ev.grupo_id = gh.id ${condicionPeriodo}
        WHERE ins.deleted_at IS NULL
        GROUP BY ins.id
-       ORDER BY u.nombre_completo`
+       ORDER BY u.nombre_completo`,
+      paramsPeriodo
     );
 
     const esPrivilegiado = req.usuario.rol_id === CAT.rol.ADMIN || req.usuario.rol_id === CAT.rol.SUPERUSUARIO;
@@ -38,6 +52,9 @@ async function crear(req, res) {
 
   if (!nombre_completo || !email || !nombre_usuario || !contrasena) {
     return res.status(400).json({ error: 'Faltan campos obligatorios' });
+  }
+  if (contrasena.trim().length < 8) {
+    return res.status(400).json({ error: 'La contraseña debe tener al menos 8 caracteres' });
   }
 
   const passwordHash = await bcrypt.hash(contrasena, 12);
@@ -65,12 +82,15 @@ async function editar(req, res) {
   const { id } = req.params;
   const {
     nombre_completo, email, telefono,
-    especialidad, experiencia_anios, horas_maximas, activo,
+    especialidad, experiencia_anios, horas_maximas,
     contrasena, color,
   } = req.body;
 
   if (!nombre_completo || !email) {
     return res.status(400).json({ error: 'Nombre y email son obligatorios' });
+  }
+  if (contrasena && contrasena.trim().length > 0 && contrasena.trim().length < 8) {
+    return res.status(400).json({ error: 'La nueva contraseña debe tener al menos 8 caracteres' });
   }
 
   const conn = await pool.getConnection();
@@ -94,15 +114,18 @@ async function editar(req, res) {
     );
 
     if (contrasena && contrasena.trim().length >= 8) {
-      const hash = await bcrypt.hash(contrasena, 12);
+      const hash = await bcrypt.hash(contrasena.trim(), 12);
       await conn.execute('UPDATE usuario SET contrasena_hash = ? WHERE id = ?', [hash, usuario_id]);
     }
 
+    // El estado activo/inactivo del instructor se gestiona únicamente con
+    // el botón "Desactivar" (soft-delete + bloqueo de login). La edición ya
+    // no admite cambiarlo de forma independiente, para evitar dos nociones
+    // de "activo" que puedan quedar desincronizadas entre sí.
     await conn.execute(
       `UPDATE instructor
          SET telefono = ?, especialidad = ?, experiencia_anios = ?, horas_maximas = ?,
-             color = COALESCE(?, color),
-             activo = COALESCE(?, activo)
+             color = COALESCE(?, color)
        WHERE id = ?`,
       [
         telefono       || null,
@@ -110,7 +133,6 @@ async function editar(req, res) {
         experiencia_anios ?? 0,
         horas_maximas  ?? 40,
         color !== undefined ? (color || null) : null,
-        activo !== undefined ? (activo ? 1 : 0) : null,
         id,
       ]
     );

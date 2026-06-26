@@ -7,8 +7,8 @@ import FiltrosBar from '../../components/common/FiltrosBar.jsx';
 import s from './Empresas.module.css';
 
 const LIMITE = 25;
-const CAMPOS_FILTRO = ['nombre', 'nit', 'ciudad', 'anio', 'mes'];
-const FILTROS_INICIAL = { nombre: '', nit: '', ciudad_id: '', anio: '', mes: '' };
+const CAMPOS_FILTRO = ['empresa', 'ciudad'];
+const FILTROS_INICIAL = { empresa: '', ciudad_id: '' };
 
 function FilaDetalle({ label, value }) {
   if (!value && value !== 0) return null;
@@ -92,11 +92,8 @@ export default function Empresas() {
   const cargar = useCallback(() => {
     const t = setTimeout(() => {
       const params = { limit: LIMITE, page: pagina };
-      if (filtros.nombre)    params.nombre    = filtros.nombre;
-      if (filtros.nit)       params.nit       = filtros.nit;
+      if (filtros.empresa)   params.empresa   = filtros.empresa;
       if (filtros.ciudad_id) params.ciudad_id = filtros.ciudad_id;
-      if (filtros.anio)      params.anio      = filtros.anio;
-      if (filtros.mes)       params.mes       = filtros.mes;
 
       EmpresaService.listar(params)
         .then(r => {
@@ -133,7 +130,6 @@ export default function Empresas() {
         onChange={f}
         onLimpiar={limpiar}
         ciudades={ciudades}
-        labelBusquedaNombre="Empresa"
       />
       <div className="card">
         <div className="card-header">

@@ -1,10 +1,14 @@
 const { pool }             = require('../config/db');
 const { notFoundSi, handleError } = require('../utils/response.utils');
 const { construirFiltroPeriodo, normalizarPaginacion } = require('../utils/db.utils');
+const { TIPOS_ENTIDAD_VALIDOS } = require('../utils/validacion.reglas');
 
 async function listar(req, res) {
   try {
-    const { estado: estadoParam, estado_solicitud, empresa, nombre, nit, anio, mes } = req.query;
+    const {
+      estado: estadoParam, estado_solicitud, empresa,
+      tipo_entidad, anio, mes,
+    } = req.query;
     const estado = estado_solicitud || estadoParam;
     const params = [];
     let clausulaWhere = 'WHERE s.deleted_at IS NULL';
@@ -19,17 +23,15 @@ async function listar(req, res) {
            ELSE 'EN_REVISION'
          END = ?`
       : '';
-    if (nombre) {
-      clausulaWhere += ' AND e.nombre LIKE ?';
-      params.push(`%${nombre}%`);
-    }
-    if (nit) {
-      clausulaWhere += ' AND e.nit LIKE ?';
-      params.push(`%${nit}%`);
-    }
-    if (!nombre && !nit && empresa) {
+    // Empresa: una sola casilla busca por nombre O NIT a la vez.
+    if (empresa) {
       clausulaWhere += ' AND (e.nombre LIKE ? OR e.nit LIKE ?)';
       params.push(`%${empresa}%`, `%${empresa}%`);
+    }
+    // Tipo de solicitud: empresa, grupo SENA o persona (independiente).
+    if (tipo_entidad && TIPOS_ENTIDAD_VALIDOS.includes(tipo_entidad)) {
+      clausulaWhere += ' AND e.tipo_entidad = ?';
+      params.push(tipo_entidad);
     }
     const periodo = construirFiltroPeriodo(anio, mes, 's.created_at');
     if (periodo.filtro) { clausulaWhere += ' ' + periodo.filtro; params.push(...periodo.params); }

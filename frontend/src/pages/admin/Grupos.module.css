@@ -24,6 +24,15 @@
   border-width: 1px;
 }
 
+.btnAccion:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+  box-shadow: none !important;
+}
+.btnAccion:disabled:hover {
+  background-color: inherit;
+}
+
 .btnVer {
   background: var(--blue-bg);
   color: var(--blue);
@@ -39,7 +48,7 @@
   color: var(--brand-text);
   border-color: rgba(255, 103, 25, 0.22);
 }
-.btnGestionar:hover {
+.btnGestionar:hover:not(:disabled) {
   background: var(--brand-muted);
   box-shadow: 0 2px 8px rgba(255, 103, 25, 0.18);
 }
@@ -59,7 +68,7 @@
   color: var(--text-secondary);
   border-color: var(--border2);
 }
-.btnEditar:hover {
+.btnEditar:hover:not(:disabled) {
   background: var(--border);
 }
 

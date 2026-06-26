@@ -1,4 +1,4 @@
-import { MESES, ANIOS_FILTRO, ASP_ESTADOS_SELECT, SOL_ESTADOS_SELECT, GRP_ESTADOS_SELECT } from '../../constants/index.js';
+import { MESES, ANIOS_FILTRO, ASP_ESTADOS_SELECT, SOL_ESTADOS_SELECT, GRP_ESTADOS_SELECT, TIPO_ENTIDAD_INFO } from '../../constants/index.js';
 
 /**
  * Barra de filtros unificada. Cada página declara qué campos necesita en
@@ -6,16 +6,21 @@ import { MESES, ANIOS_FILTRO, ASP_ESTADOS_SELECT, SOL_ESTADOS_SELECT, GRP_ESTADO
  * `valores` + `onChange`. Así se evita duplicar la lógica/JSX de filtros
  * en cada página, sin forzar a todas las páginas a tener los mismos filtros.
  *
- * Campos soportados: nombre, empresa, nit, cc, ciudad, anio, mes, curso, estadoGrupo, estado, estadoSolicitud
+ * Campos soportados: aspirante, empresa, tipoEntidad, ciudad, anio, mes, curso, estadoGrupo, estado, estadoSolicitud
+ *
+ * - 'aspirante': una sola casilla que busca por nombre del aspirante o por
+ *   número de cédula (si el texto es puramente numérico se busca por cédula,
+ *   si tiene letras se busca por nombre). Clave en valores: `aspirante`.
+ * - 'empresa': una sola casilla que busca por nombre de empresa o por NIT
+ *   a la vez. Clave en valores: `empresa`.
  *
  * Props:
  *  - campos:    string[] -> qué inputs mostrar y en qué orden
- *  - valores:   objeto { nombre, empresa, nit, cc, ciudad_id, anio, mes, curso_id, estado, estado_grupo, estado_solicitud }
+ *  - valores:   objeto { aspirante, empresa, tipo_entidad, ciudad_id, anio, mes, curso_id, estado, estado_grupo, estado_solicitud }
  *  - onChange:  (clave, valor) => void
  *  - onLimpiar: () => void
  *  - cursos:    [{id, nombre}] -> requerido si se incluye 'curso'
  *  - ciudades:  [{id, nombre, departamento}] -> requerido si se incluye 'ciudad'
- *  - labelBusquedaNombre: texto del label para el campo `nombre` (por defecto "Nombre")
  */
 export default function FiltrosBar({
   campos = [],
@@ -24,33 +29,20 @@ export default function FiltrosBar({
   onLimpiar = () => {},
   cursos = [],
   ciudades = [],
-  labelBusquedaNombre = 'Nombre',
   extra = null,
 }) {
   const v = (clave, fallback = '') => valores[clave] ?? fallback;
 
   return (
     <div className="filters-bar">
-      {campos.includes('nombre') && (
+      {campos.includes('aspirante') && (
         <div className="filter-group">
-          <label>{labelBusquedaNombre}</label>
+          <label>Aspirante</label>
           <input
             className="filter-input filter-search"
-            placeholder={`Buscar por ${labelBusquedaNombre.toLowerCase()}...`}
-            value={v('nombre')}
-            onChange={e => onChange('nombre', e.target.value)}
-          />
-        </div>
-      )}
-
-      {campos.includes('nit') && (
-        <div className="filter-group">
-          <label>NIT</label>
-          <input
-            className="filter-input"
-            placeholder="NIT de la empresa..."
-            value={v('nit')}
-            onChange={e => onChange('nit', e.target.value)}
+            placeholder="Nombre o número de cédula..."
+            value={v('aspirante')}
+            onChange={e => onChange('aspirante', e.target.value)}
           />
         </div>
       )}
@@ -59,23 +51,27 @@ export default function FiltrosBar({
         <div className="filter-group">
           <label>Empresa</label>
           <input
-            className="filter-input"
-            placeholder="Nombre de la empresa..."
+            className="filter-input filter-search"
+            placeholder="Nombre o NIT de la empresa..."
             value={v('empresa')}
             onChange={e => onChange('empresa', e.target.value)}
           />
         </div>
       )}
 
-      {campos.includes('cc') && (
+      {campos.includes('tipoEntidad') && (
         <div className="filter-group">
-          <label>Cédula</label>
-          <input
+          <label>Tipo de solicitud</label>
+          <select
             className="filter-input"
-            placeholder="Número de documento..."
-            value={v('cc')}
-            onChange={e => onChange('cc', e.target.value)}
-          />
+            value={v('tipo_entidad')}
+            onChange={e => onChange('tipo_entidad', e.target.value)}
+          >
+            <option value="">Todos</option>
+            {Object.entries(TIPO_ENTIDAD_INFO).map(([clave, info]) => (
+              <option key={clave} value={clave}>{info.label}</option>
+            ))}
+          </select>
         </div>
       )}
 

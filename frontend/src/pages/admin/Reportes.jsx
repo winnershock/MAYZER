@@ -252,6 +252,23 @@ export default function Reportes() {
           <div className={`card ${s.cardMarginTop}`}>
             <div className="card-header">
               <span className="card-title">
+                <Icon name="building" size={14} /> Ranking de empresas por solicitudes
+              </span>
+              <BotonesDescarga tabla="solicitudes" anio={filtros.anio} mes={filtros.mes} compact toast={toast} />
+            </div>
+            <div className="card-body">
+              <BarChart
+                items={datos.empresasRankingSolicitudes}
+                keyLabel="nombre"
+                keyVal="total_solicitudes"
+                color="var(--brand)"
+              />
+            </div>
+          </div>
+
+          <div className={`card ${s.cardMarginTop}`}>
+            <div className="card-header">
+              <span className="card-title">
                 <Icon name="users" size={14} /> Aspirantes por estado
               </span>
               <BotonesDescarga tabla="aspirantes" anio={filtros.anio} mes={filtros.mes} toast={toast} />
