@@ -1,0 +1,39 @@
+# ══════════════════════════════════════════════════════
+#   MAYZER — Variables de entorno
+#   ⚠️  NUNCA subir este archivo a Git
+# ══════════════════════════════════════════════════════
+
+# ── Base de datos MySQL ─────────────────────────────
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=202436411
+DB_NAME=mayzer_db
+
+# ── JWT (autenticación) ─────────────────────────────
+JWT_SECRET=mayzer_dev_secret_cambiar_en_produccion_2025_sena_palmira
+JWT_EXPIRES_IN=15m
+
+# ── Servidor ────────────────────────────────────────
+PORT=3001
+NODE_ENV=development
+
+# ── Cifrado de datos sensibles (documento, email, teléfono de aspirantes) ──
+# Si no se define, el sistema usa 'mayzer_dev_key_no_usar_produccion' (modo dev).
+# Define una clave propia de al menos 32 caracteres y NO la cambies después,
+# o los datos ya cifrados quedarán ilegibles.
+ENCRYPTION_KEY=mayzer_clave_32_chars_cambiar!!
+
+# ── Frontend (CORS) ─────────────────────────────────
+FRONTEND_URL=http://localhost:5173
+
+# ── Correo SMTP ─────────────────────────────────────
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USER=bryandavidlopez74@gmail.com
+MAIL_PASS=rsdn tlib iadf dqga
+MAIL_FROM=MAYZER SENA <bryandavidlopez74@gmail.com>
+
+# ── SENA ─────────────────────────────────────────────
+SENA_NOMBRE=SENA Sede Palmira
+SENA_DIRECCION=Palmira, Valle del Cauca, Colombia

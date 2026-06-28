@@ -28,14 +28,14 @@ function descifrarAspirante(fila) {
   };
 }
 
-function descifrarMedico(filaMediaca) {
-  if (!filaMediaca) return null;
+function descifrarMedico(filaMedica) {
+  if (!filaMedica) return null;
   return {
-    ...filaMediaca,
-    eps:          descifrar(filaMediaca.eps)          || null,
-    arl:          descifrar(filaMediaca.arl)          || null,
-    antecedentes: descifrar(filaMediaca.antecedentes) || null,
-    medicamentos: descifrar(filaMediaca.medicamentos) || null,
+    ...filaMedica,
+    eps:          descifrar(filaMedica.eps)          || null,
+    arl:          descifrar(filaMedica.arl)          || null,
+    antecedentes: descifrar(filaMedica.antecedentes) || null,
+    medicamentos: descifrar(filaMedica.medicamentos) || null,
   };
 }
 

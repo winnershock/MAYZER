@@ -112,7 +112,23 @@ async function procesarGruposParaZip(archive, anioNum, mesNum, gruposIds) {
     ]);
     const empresasRes = resumenEmpresas(lista);
 
-    const wb      = await construirExcelMensual(lista, estadosRes, cursosRes, empresasRes, anioNum, mesNum || lista[0]?.mes_num);
+    // Toda la información del grupo (y, por extensión, de la solicitud y los
+    // aspirantes que ya viajan en `lista`) para la hoja "Información del Grupo".
+    const primero   = lista[0] || {};
+    const infoGrupo = {
+      codigo:        primero.grupo_codigo,
+      nombre:        nombreGrupo,
+      curso:         primero.curso_nombre,
+      instructor:    primero.grupo_instructor,
+      estado:        primero.grupo_estado,
+      cupo_maximo:   primero.grupo_cupo_maximo,
+      fecha_inicio:  primero.grupo_fecha_inicio,
+      fecha_fin:     primero.grupo_fecha_fin,
+      lugar:         primero.grupo_lugar,
+      observaciones: primero.grupo_observaciones,
+    };
+
+    const wb      = await construirExcelMensual(lista, estadosRes, cursosRes, empresasRes, anioNum, mesNum || lista[0]?.mes_num, infoGrupo);
     const bufXlsx = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx', bookSST: false });
     archive.append(bufXlsx, { name: `${carpetaGrupo}/Aspirantes_${nombreSeguro(nombreGrupo)}.xlsx` });
 

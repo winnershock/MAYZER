@@ -108,7 +108,6 @@ async function exportarExcel(req, res) {
     solicitudes:        () => ReporteData.consultarSolicitudes(fSol.filtro, fSol.params),
     grupos:             () => ReporteData.consultarGrupos(fGrp.filtro, fGrp.params),
     empresas:           () => ReporteData.consultarEmpresasDetalle(fSol.filtro, fSol.params),
-    aspirantes_empresa: () => ReporteData.consultarAspirantesEmpresaDetalle(fAsp.filtro, fAsp.params),
   };
 
   try {
@@ -256,28 +255,16 @@ async function exportarZipAnual(req, res) {
       name: `${anioNum}/README.txt`,
     });
 
-    // Excel consolidados del periodo completo, en la raíz del ZIP (no por mes).
+    // Excel consolidado de empresas del periodo completo, en la raíz del ZIP (no por mes).
     const fSolPeriodo = construirFiltroPeriodo(anioNum, mesNum, 's.created_at');
-    const fAspPeriodo = construirFiltroPeriodo(anioNum, mesNum, 'a.created_at');
 
-    const [filasEmpresas, filasAspEmpresa] = await Promise.all([
-      ReporteData.consultarEmpresasDetalle(fSolPeriodo.filtro, fSolPeriodo.params),
-      ReporteData.consultarAspirantesEmpresaDetalle(fAspPeriodo.filtro, fAspPeriodo.params),
-    ]);
+    const filasEmpresas = await ReporteData.consultarEmpresasDetalle(fSolPeriodo.filtro, fSolPeriodo.params);
 
     if (filasEmpresas.length) {
       const cfgEmp = obtenerConfigExcel('empresas', filasEmpresas);
       const wbEmp  = construirLibroExcel(cfgEmp.encabezados, cfgEmp.datos, cfgEmp.anchos, 'empresas', anioNum, mesNum);
       archive.append(XLSX.write(wbEmp, { type: 'buffer', bookType: 'xlsx', bookSST: false }), {
         name: `${anioNum}/Excel_Empresas_${periodoLabel}.xlsx`,
-      });
-    }
-
-    if (filasAspEmpresa.length) {
-      const cfgAE = obtenerConfigExcel('aspirantes_empresa', filasAspEmpresa);
-      const wbAE  = construirLibroExcel(cfgAE.encabezados, cfgAE.datos, cfgAE.anchos, 'aspirantes_empresa', anioNum, mesNum);
-      archive.append(XLSX.write(wbAE, { type: 'buffer', bookType: 'xlsx', bookSST: false }), {
-        name: `${anioNum}/Excel_Aspirantes_Empresa_${periodoLabel}.xlsx`,
       });
     }
 

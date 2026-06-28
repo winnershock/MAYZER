@@ -13,7 +13,6 @@ const TABLAS = [
   { key: 'solicitudes',        label: 'Solicitudes',          icon: 'clipboard', desc: 'Solicitudes por empresa con cantidad de aspirantes' },
   { key: 'grupos',             label: 'Grupos',                icon: 'book',      desc: 'Grupos de formación con instructor y ocupación' },
   { key: 'empresas',           label: 'Empresas',             icon: 'building',  desc: 'Directorio completo de empresas con contacto y ubicación' },
-  { key: 'aspirantes_empresa', label: 'Aspirantes + Empresa', icon: 'users',     desc: 'Aspirantes con toda la información de su empresa' },
 ];
 
 function BarChart({ items, keyLabel, keyVal, color = 'var(--brand)' }) {
@@ -42,7 +41,7 @@ function BarChart({ items, keyLabel, keyVal, color = 'var(--brand)' }) {
   );
 }
 
-const TIPOS_SOLO_EXCEL = new Set(['empresas', 'aspirantes_empresa']);
+const TIPOS_SOLO_EXCEL = new Set(['empresas']);
 
 function BotonesDescarga({ tabla, anio, mes, compact = false, toast }) {
   const [descargando, setDescargando] = useState(null);

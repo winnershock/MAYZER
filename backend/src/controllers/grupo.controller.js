@@ -96,30 +96,78 @@ async function verUno(req, res) {
     const [filasAspirantes] = await pool.execute(
       `SELECT a.id,
               a.nombre_completo,
+              a.nombre1, a.nombre2, a.apellido1, a.apellido2,
               a.tipo_documento,
               a.numero_documento,
               a.email,
               a.telefono,
+              a.fecha_nacimiento,
+              a.motivo_rechazo,
+              a.created_at,
               c.nombre        AS curso_requerido,
-              e.nombre        AS empresa,
               ie.nombre       AS estado,
-              ins_e.nombre    AS inscripcion_estado
+              ins_e.nombre    AS inscripcion_estado,
+
+              -- Empresa que realizó la inscripción del aspirante (información completa)
+              e.nombre          AS empresa,
+              e.nit,
+              e.tipo_entidad,
+              e.email           AS empresa_email,
+              e.telefono        AS empresa_telefono,
+              e.direccion       AS empresa_direccion,
+              e.nombre_contacto AS empresa_nombre_contacto,
+              e.cargo_contacto  AS empresa_cargo_contacto,
+              ciE.nombre        AS empresa_ciudad,
+              ciE.departamento  AS empresa_departamento,
+
+              -- Solicitud asociada
+              s.num_aspirantes  AS solicitud_num_aspirantes,
+              s.observaciones   AS solicitud_observaciones,
+              DATE_FORMAT(s.created_at, '%d/%m/%Y') AS solicitud_fecha,
+
+              -- Información médica del formulario de inscripción (cifrada)
+              am.tipo_sangre   AS medico_tipo_sangre,
+              am.eps           AS medico_eps,
+              am.arl           AS medico_arl,
+              am.antecedentes  AS medico_antecedentes,
+              am.medicamentos  AS medico_medicamentos,
+
+              -- Contacto de emergencia
+              ace.nombre               AS contacto_nombre,
+              ace.telefono             AS contacto_telefono,
+              ace.telefono_emergencia2 AS contacto_telefono2,
+              ace.telefono_emergencia3 AS contacto_telefono3,
+
+              -- Información laboral / académica
+              al.nivel_academico AS laboral_nivel_academico,
+              al.cargo           AS laboral_cargo,
+              al.area_trabajo    AS laboral_area_trabajo,
+              al.sector          AS laboral_sector,
+              al.vinculacion     AS laboral_vinculacion
        FROM inscripcion   i
        JOIN aspirante     a    ON i.aspirante_id  = a.id
        JOIN solicitud     s    ON a.solicitud_id  = s.id
        JOIN empresa       e    ON s.empresa_id    = e.id
+       LEFT JOIN ciudad   ciE  ON e.ciudad_id     = ciE.id
        JOIN curso         c    ON s.curso_id      = c.id
        JOIN inscripcion_estado ie ON i.estado_id  = ie.id
        LEFT JOIN aspirante_estado ins_e ON a.estado_id = ins_e.id
+       LEFT JOIN aspirante_medico              am  ON am.aspirante_id  = a.id
+       LEFT JOIN aspirante_contacto_emergencia ace ON ace.aspirante_id = a.id
+       LEFT JOIN aspirante_laboral             al  ON al.aspirante_id  = a.id
        WHERE i.grupo_id = ?`,
       [req.params.id]
     );
 
     const aspirantesDecifrados = filasAspirantes.map(a => ({
       ...a,
-      numero_documento: descifrar(a.numero_documento) || '',
-      email:            descifrar(a.email)            || '',
-      telefono:         descifrar(a.telefono)         || '',
+      numero_documento:    descifrar(a.numero_documento)    || '',
+      email:               descifrar(a.email)                || '',
+      telefono:            descifrar(a.telefono)             || '',
+      medico_eps:          descifrar(a.medico_eps)           || '',
+      medico_arl:          descifrar(a.medico_arl)           || '',
+      medico_antecedentes: descifrar(a.medico_antecedentes)  || '',
+      medico_medicamentos: descifrar(a.medico_medicamentos)  || '',
     }));
 
     res.json({ ...filasGrupo[0], aspirantes: aspirantesDecifrados });

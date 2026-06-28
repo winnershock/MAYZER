@@ -4,7 +4,7 @@ function validarParamsExport(query) {
   const { anio, mes, tipo = 'aspirantes' } = query;
 
   if (!ReporteData.esTipoValido(tipo)) {
-    return { ok: false, mensaje: `Tipo "${tipo}" no reconocido. Válidos: aspirantes, solicitudes, grupos, empresas, aspirantes_empresa.` };
+    return { ok: false, mensaje: `Tipo "${tipo}" no reconocido. Válidos: aspirantes, solicitudes, grupos, empresas.` };
   }
 
   if (anio !== undefined) {

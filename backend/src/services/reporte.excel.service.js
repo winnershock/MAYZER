@@ -57,7 +57,6 @@ const ETIQUETA_TIPO = {
   solicitudes: 'Solicitudes',
   grupos: 'Grupos',
   empresas: 'Empresas',
-  aspirantes_empresa: 'Aspirantes y Empresa',
 };
 
 function etiquetaTipo(tipo) {
@@ -150,29 +149,12 @@ function obtenerConfigExcel(tipo, filas) {
                                Number(r.total_solicitudes), Number(r.total_aspirantes)]),
         anchos: [26, 14, 14, 26, 13, 20, 18, 24, 16, 16, 8, 14, 12, 12],
       };
-    case 'aspirantes_empresa':
-      return {
-        encabezados: ['Primer Nombre', 'Segundo Nombre', 'Primer Apellido', 'Segundo Apellido',
-                      'Tipo Doc.', 'N.° Documento', 'Email Aspirante', 'Teléfono Aspirante',
-                      'Fecha Nacimiento', 'Estado', 'Curso Solicitado', 'Fecha Solicitud',
-                      'Grupo Asignado', 'Empresa', 'NIT', 'Tipo Entidad', 'Email Empresa',
-                      'Teléfono Empresa', 'Contacto', 'Cargo Contacto', 'Dirección', 'Ciudad', 'Departamento'],
-        datos: filas.map(r => [r.nombre1 || '—', r.nombre2 || '—', r.apellido1 || '—', r.apellido2 || '—',
-                               r.tipo_documento, r.numero_documento || '—',
-                               r.email || '—', r.telefono || '—', r.fecha_nacimiento || '—',
-                               r.estado, r.curso, r.fecha_solicitud,
-                               r.grupo_asignado || '—', r.empresa, r.nit, r.tipo_entidad,
-                               r.empresa_email, r.empresa_telefono || '—',
-                               r.nombre_contacto || '—', r.cargo_contacto || '—',
-                               r.direccion || '—', r.ciudad || '—', r.departamento || '—']),
-        anchos: [16, 16, 16, 16, 10, 16, 24, 14, 14, 14, 22, 14, 20, 22, 14, 14, 24, 14, 20, 18, 24, 16, 16],
-      };
     default:
       return null;
   }
 }
 
-async function construirExcelMensual(aspirantes, estadosRes, cursosRes, empresasRes, anio, mes) {
+async function construirExcelMensual(aspirantes, estadosRes, cursosRes, empresasRes, anio, mes, infoGrupo = null) {
   const wb  = XLSX.utils.book_new();
   const ahora = new Date().toLocaleString('es-CO', {
     timeZone: 'America/Bogota', day: '2-digit', month: '2-digit', year: 'numeric',
@@ -181,11 +163,34 @@ async function construirExcelMensual(aspirantes, estadosRes, cursosRes, empresas
   const periodo = `${MESES[mes]} ${anio}`;
 
   const encAsp = [
-    'N°', 'Nombre Completo', 'Tipo Doc.', 'N° Documento', 'Correo',
-    'Teléfono', 'Estado', 'Empresa', 'NIT', 'Tipo Entidad',
-    'Curso Solicitado', 'Grupo Asignado', 'Fecha Registro', 'Motivo Rechazo',
+    'N°', 'Primer Nombre', 'Segundo Nombre', 'Primer Apellido', 'Segundo Apellido',
+    'Tipo Doc.', 'N° Documento', 'Correo', 'Teléfono', 'Fecha Nacimiento',
+    'Estado', 'Curso Solicitado', 'Grupo Asignado', 'Fecha Registro', 'Motivo Rechazo',
+    // Solicitud asociada
+    'Solicitud N° Aspirantes', 'Observaciones Solicitud', 'Fecha Solicitud',
+    // Empresa que realizó la inscripción
+    'Empresa', 'NIT', 'Tipo Entidad', 'Email Empresa', 'Teléfono Empresa',
+    'Dirección Empresa', 'Ciudad Empresa', 'Departamento Empresa',
+    'Contacto Empresa', 'Cargo Contacto Empresa',
+    // Información médica
+    'Tipo de Sangre', 'EPS', 'ARL', 'Antecedentes Médicos', 'Medicamentos',
+    // Contacto de emergencia
+    'Contacto Emergencia', 'Tel. Emergencia 1', 'Tel. Emergencia 2', 'Tel. Emergencia 3',
+    // Información laboral / académica
+    'Nivel Académico', 'Cargo', 'Área de Trabajo', 'Sector', 'Vinculación',
   ];
-  const anchosAsp = [4, 28, 9, 14, 26, 13, 13, 24, 14, 14, 24, 20, 13, 24];
+  const anchosAsp = [
+    4, 16, 16, 16, 16,
+    9, 14, 26, 13, 13,
+    13, 24, 20, 13, 24,
+    12, 28, 13,
+    24, 14, 14, 24, 14,
+    24, 16, 16,
+    20, 18,
+    10, 22, 22, 26, 22,
+    20, 16, 16, 16,
+    18, 20, 20, 16, 16,
+  ];
 
   const tituloAsp = [{ v: `MAYZER · Aspirantes — ${periodo}`, t: 's', s: {
     font: { bold: true, sz: 14, color: { rgb: M.NARANJA }, name: 'Calibri' },
@@ -208,12 +213,32 @@ async function construirExcelMensual(aspirantes, estadosRes, cursosRes, empresas
       s: num ? (alt ? EST_NUMERO_ALT : EST_NUMERO) : (alt ? EST_CELDA_ALT : EST_CELDA),
     });
     aoaAsp.push([
-      S(ri + 1, true), S(a.nombre_completo), S(a.tipo_documento), S(a.numero_documento),
-      S(a.email), S(a.telefono), S(a.estado_nombre),
-      S(a.empresa), S(a.nit), S(a.tipo_entidad),
-      S(a.curso_nombre), S(a.grupo_nombre || '—'),
+      S(ri + 1, true), S(a.nombre1 || '—'), S(a.nombre2 || '—'),
+      S(a.apellido1 || '—'), S(a.apellido2 || '—'),
+      S(a.tipo_documento), S(a.numero_documento),
+      S(a.email), S(a.telefono),
+      S(a.fecha_nacimiento ? new Date(a.fecha_nacimiento).toLocaleDateString('es-CO') : '—'),
+      S(a.estado_nombre), S(a.curso_nombre), S(a.grupo_nombre || '—'),
       S(new Date(a.created_at).toLocaleDateString('es-CO')),
       S(a.motivo_rechazo || '—'),
+      // Solicitud
+      S(a.solicitud_num_aspirantes ?? '—', typeof a.solicitud_num_aspirantes === 'number'),
+      S(a.solicitud_observaciones || '—'),
+      S(a.solicitud_fecha || '—'),
+      // Empresa
+      S(a.empresa), S(a.nit), S(a.tipo_entidad), S(a.email_empresa || '—'),
+      S(a.empresa_telefono || '—'), S(a.empresa_direccion || '—'),
+      S(a.empresa_ciudad || '—'), S(a.empresa_departamento || '—'),
+      S(a.empresa_nombre_contacto || '—'), S(a.empresa_cargo_contacto || '—'),
+      // Médico
+      S(a.medico_tipo_sangre || '—'), S(a.medico_eps || '—'), S(a.medico_arl || '—'),
+      S(a.medico_antecedentes || '—'), S(a.medico_medicamentos || '—'),
+      // Contacto de emergencia
+      S(a.contacto_nombre || '—'), S(a.contacto_telefono || '—'),
+      S(a.contacto_telefono2 || '—'), S(a.contacto_telefono3 || '—'),
+      // Laboral
+      S(a.laboral_nivel_academico || '—'), S(a.laboral_cargo || '—'),
+      S(a.laboral_area_trabajo || '—'), S(a.laboral_sector || '—'), S(a.laboral_vinculacion || '—'),
     ]);
   });
 
@@ -225,6 +250,38 @@ async function construirExcelMensual(aspirantes, estadosRes, cursosRes, empresas
     { s: { r: 1, c: 0 }, e: { r: 1, c: encAsp.length - 1 } },
   ];
   XLSX.utils.book_append_sheet(wb, wsAsp, 'Aspirantes');
+
+  if (infoGrupo) {
+    const filaTitulo = (txt) => [{ v: txt, t: 's', s: {
+      font: { bold: true, sz: 13, color: { rgb: M.NARANJA }, name: 'Calibri' },
+    }}];
+    const filaCampo = (label, valor, alt) => [
+      { v: label, t: 's', s: alt ? EST_CELDA_ALT : EST_CELDA },
+      { v: valor ?? '—', t: 's', s: alt ? EST_CELDA_ALT : EST_CELDA },
+    ];
+    const aoaGrupo = [
+      filaTitulo(`MAYZER · Información del Grupo — ${infoGrupo.nombre || '—'}`),
+      [{ v: '', t: 's' }],
+    ];
+    const campos = [
+      ['Código',           infoGrupo.codigo],
+      ['Nombre del Grupo', infoGrupo.nombre],
+      ['Curso',            infoGrupo.curso],
+      ['Instructor',       infoGrupo.instructor],
+      ['Estado',           infoGrupo.estado],
+      ['Cupo Máximo',      infoGrupo.cupo_maximo],
+      ['Fecha Inicio',     infoGrupo.fecha_inicio],
+      ['Fecha Fin',        infoGrupo.fecha_fin],
+      ['Lugar',            infoGrupo.lugar],
+      ['Observaciones',    infoGrupo.observaciones],
+    ];
+    campos.forEach(([label, valor], ri) => aoaGrupo.push(filaCampo(label, valor, ri % 2 === 1)));
+
+    const wsGrupo      = XLSX.utils.aoa_to_sheet(aoaGrupo);
+    wsGrupo['!cols']    = [{ wch: 22 }, { wch: 46 }];
+    wsGrupo['!merges']  = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 1 } }];
+    XLSX.utils.book_append_sheet(wb, wsGrupo, 'Información del Grupo');
+  }
 
   const aoaStat = [
     [{ v: `MAYZER · Estadísticas — ${periodo}`, t: 's', s: {

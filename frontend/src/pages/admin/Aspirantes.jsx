@@ -12,7 +12,7 @@ import AccionesAspirante from '../../components/aspirantes/AccionesAspirante.jsx
 import ConfirmDialog     from '../../components/common/ConfirmDialog.jsx';
 import FiltrosBar        from '../../components/common/FiltrosBar.jsx';
 import Icon from '../../components/common/Icon.jsx';
-import { ASP_ESTADOS_SELECT, API_BASE } from '../../constants/index.js';
+import { API_BASE } from '../../constants/index.js';
 
 const CAMPOS_FILTRO = ['aspirante', 'empresa', 'curso', 'estado', 'anio', 'mes'];
 

@@ -32,7 +32,6 @@ export default function Solicitudes() {
     pagina,
     totalPaginas,
     cargando,
-    recargar,
     cambiarPagina,
   } = usePaginatedFetch(
     (params) =>

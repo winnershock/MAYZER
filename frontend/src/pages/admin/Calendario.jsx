@@ -96,7 +96,7 @@ function ModalDetalleEvento({ evento, esAdmin, instructores, onClose, onEditar, 
   );
 }
 
-function ModalDiaEventos({ dia, anio, mes, eventos, instructores, esAdmin, onSelEvento, onClose }) {
+function ModalDiaEventos({ dia, anio, mes, eventos, instructores, onSelEvento, onClose }) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className={`modal ${styles['cal-modal-dia']}`} onClick={e => e.stopPropagation()}>

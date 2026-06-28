@@ -1,7 +1,7 @@
 const { pool }                  = require('../config/db');
 const { descifrar }             = require('../utils/crypto.utils');
 
-const TIPOS_VALIDOS = new Set(['aspirantes', 'solicitudes', 'grupos', 'empresas', 'aspirantes_empresa']);
+const TIPOS_VALIDOS = new Set(['aspirantes', 'solicitudes', 'grupos', 'empresas']);
 
 function esTipoValido(tipo) {
   return TIPOS_VALIDOS.has(tipo);
@@ -101,6 +101,11 @@ async function consultarEstadisticasGrupos(filtro, params) {
   return stats;
 }
 
+// Trae toda la información registrada en el formulario de inscripción: datos
+// del aspirante, de la solicitud, de la empresa solicitante y de los
+// formularios complementarios (médico, contacto de emergencia, laboral).
+// Se usa tanto en el módulo de Grupos como en el de Reportes para que las
+// exportaciones de Excel/ZIP sean consistentes entre ambos.
 async function consultarAspirantesDetalle(filtro, params) {
   const [filas] = await pool.execute(
     `SELECT
@@ -117,29 +122,90 @@ async function consultarAspirantesDetalle(filtro, params) {
         a.documento_pdf,
         a.created_at,
         ae.nombre  AS estado_nombre,
-        e.nombre   AS empresa, e.nit, e.tipo_entidad, e.email AS email_empresa,
+
+        -- Empresa que realizó la inscripción del aspirante (información completa)
+        e.id            AS empresa_id,
+        e.nombre        AS empresa, e.nit, e.tipo_entidad,
+        e.email         AS email_empresa,
+        e.telefono      AS empresa_telefono,
+        e.direccion     AS empresa_direccion,
+        e.nombre_contacto AS empresa_nombre_contacto,
+        e.cargo_contacto  AS empresa_cargo_contacto,
+        e.activo          AS empresa_activo,
+        ciE.nombre        AS empresa_ciudad,
+        ciE.departamento  AS empresa_departamento,
+
+        -- Solicitud asociada
+        s.id            AS solicitud_id,
+        s.num_aspirantes  AS solicitud_num_aspirantes,
+        s.observaciones   AS solicitud_observaciones,
+        DATE_FORMAT(s.created_at, '%d/%m/%Y') AS solicitud_fecha,
+
         c.nombre   AS curso_nombre,
-        s.id       AS solicitud_id,
-        g.nombre   AS grupo_nombre,
+
+        -- Grupo (si ya fue asignado)
+        g.id            AS grupo_id_real,
+        g.codigo        AS grupo_codigo,
+        g.nombre        AS grupo_nombre,
+        ge.nombre       AS grupo_estado,
+        g.cupo_maximo   AS grupo_cupo_maximo,
+        DATE_FORMAT(g.fecha_inicio, '%d/%m/%Y') AS grupo_fecha_inicio,
+        DATE_FORMAT(g.fecha_fin,    '%d/%m/%Y') AS grupo_fecha_fin,
+        g.observaciones AS grupo_observaciones,
+        lg.nombre       AS grupo_lugar,
+        uIns.nombre_completo AS grupo_instructor,
         i.grupo_id,
+
+        -- Información médica del formulario de inscripción (cifrada)
+        am.tipo_sangre   AS medico_tipo_sangre,
+        am.eps           AS medico_eps,
+        am.arl           AS medico_arl,
+        am.antecedentes  AS medico_antecedentes,
+        am.medicamentos  AS medico_medicamentos,
+
+        -- Contacto de emergencia
+        ace.nombre               AS contacto_nombre,
+        ace.telefono             AS contacto_telefono,
+        ace.telefono_emergencia2 AS contacto_telefono2,
+        ace.telefono_emergencia3 AS contacto_telefono3,
+
+        -- Información laboral / académica
+        al.nivel_academico AS laboral_nivel_academico,
+        al.cargo           AS laboral_cargo,
+        al.area_trabajo    AS laboral_area_trabajo,
+        al.sector          AS laboral_sector,
+        al.vinculacion     AS laboral_vinculacion,
+
         MONTH(a.created_at) AS mes_num,
         YEAR(a.created_at)  AS anio_num
      FROM aspirante a
      JOIN aspirante_estado ae ON a.estado_id    = ae.id
      JOIN solicitud        s  ON a.solicitud_id = s.id
      JOIN empresa          e  ON s.empresa_id   = e.id
+     LEFT JOIN ciudad      ciE ON e.ciudad_id   = ciE.id
      JOIN curso            c  ON s.curso_id     = c.id
      LEFT JOIN inscripcion i  ON i.aspirante_id = a.id
      LEFT JOIN grupo       g  ON i.grupo_id     = g.id
+     LEFT JOIN grupo_estado ge  ON g.estado_id    = ge.id
+     LEFT JOIN lugar        lg  ON g.lugar_id     = lg.id
+     LEFT JOIN instructor   insG ON g.instructor_id = insG.id
+     LEFT JOIN usuario      uIns ON insG.usuario_id  = uIns.id
+     LEFT JOIN aspirante_medico              am  ON am.aspirante_id  = a.id
+     LEFT JOIN aspirante_contacto_emergencia ace ON ace.aspirante_id = a.id
+     LEFT JOIN aspirante_laboral             al  ON al.aspirante_id  = a.id
      WHERE 1=1 ${filtro} ORDER BY a.created_at ASC`,
     params
   );
 
   return filas.map(f => ({
     ...f,
-    numero_documento: descifrar(f.numero_documento) || '',
-    email:            descifrar(f.email)            || '',
-    telefono:         descifrar(f.telefono)         || '',
+    numero_documento:    descifrar(f.numero_documento)    || '',
+    email:               descifrar(f.email)                || '',
+    telefono:            descifrar(f.telefono)             || '',
+    medico_eps:          descifrar(f.medico_eps)           || '',
+    medico_arl:          descifrar(f.medico_arl)           || '',
+    medico_antecedentes: descifrar(f.medico_antecedentes)  || '',
+    medico_medicamentos: descifrar(f.medico_medicamentos)  || '',
   }));
 }
 
@@ -222,47 +288,12 @@ async function consultarEmpresasDetalle(filtro, params) {
   return filas;
 }
 
-async function consultarAspirantesEmpresaDetalle(filtro, params) {
-  const [filas] = await pool.execute(
-    `SELECT a.nombre_completo,
-            a.nombre1, a.nombre2, a.apellido1, a.apellido2,
-            a.tipo_documento, a.numero_documento,
-            a.email, a.telefono,
-            DATE_FORMAT(a.fecha_nacimiento, '%d/%m/%Y') AS fecha_nacimiento,
-            ae.nombre AS estado,
-            c.nombre  AS curso,
-            DATE_FORMAT(a.created_at, '%d/%m/%Y') AS fecha_solicitud,
-            g.nombre  AS grupo_asignado,
-            e.nombre  AS empresa, e.nit, e.tipo_entidad,
-            e.email AS empresa_email, e.telefono AS empresa_telefono,
-            e.nombre_contacto, e.cargo_contacto, e.direccion,
-            ci.nombre AS ciudad, ci.departamento
-     FROM aspirante a
-     JOIN aspirante_estado ae ON a.estado_id    = ae.id
-     JOIN solicitud        s  ON a.solicitud_id = s.id
-     JOIN empresa          e  ON s.empresa_id   = e.id
-     JOIN curso            c  ON s.curso_id     = c.id
-     LEFT JOIN ciudad      ci ON e.ciudad_id    = ci.id
-     LEFT JOIN inscripcion i  ON i.aspirante_id = a.id
-     LEFT JOIN grupo       g  ON i.grupo_id     = g.id
-     WHERE 1=1 ${filtro} ORDER BY e.nombre, a.nombre_completo`,
-    params
-  );
-  return filas.map(f => ({
-    ...f,
-    numero_documento: descifrar(f.numero_documento) || '',
-    email:            descifrar(f.email)            || '',
-    telefono:         descifrar(f.telefono)         || '',
-  }));
-}
-
 module.exports = {
   esTipoValido,
   consultarAspirantes,
   consultarSolicitudes,
   consultarGrupos,
   consultarEmpresasDetalle,
-  consultarAspirantesEmpresaDetalle,
   consultarEstadisticasAspirantes,
   consultarEstadisticasSolicitudes,
   consultarEstadisticasGrupos,

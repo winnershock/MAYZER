@@ -67,8 +67,23 @@ function construirWorkbook(g, fechaInicioFmt, fechaFinFmt) {
   XLSX.utils.book_append_sheet(wb, wsRes, 'Resumen');
 
   const aspirantes = g.aspirantes ?? [];
-  const COLS = ['#', 'Nombre Completo', 'Tipo Doc.', 'N.° Documento',
-    'Email', 'Teléfono', 'Empresa', 'Curso Requerido', 'Estado'];
+  const COLS = [
+    '#', 'Primer Nombre', 'Segundo Nombre', 'Primer Apellido', 'Segundo Apellido',
+    'Tipo Doc.', 'N.° Documento', 'Email', 'Teléfono', 'Fecha Nacimiento',
+    'Curso Requerido', 'Estado Inscripción', 'Estado Aspirante', 'Fecha Registro', 'Motivo Rechazo',
+    // Solicitud
+    'Solicitud N° Aspirantes', 'Observaciones Solicitud', 'Fecha Solicitud',
+    // Empresa
+    'Empresa', 'NIT', 'Tipo Entidad', 'Email Empresa', 'Teléfono Empresa',
+    'Dirección Empresa', 'Ciudad Empresa', 'Departamento Empresa',
+    'Contacto Empresa', 'Cargo Contacto Empresa',
+    // Médico
+    'Tipo de Sangre', 'EPS', 'ARL', 'Antecedentes Médicos', 'Medicamentos',
+    // Contacto de emergencia
+    'Contacto Emergencia', 'Tel. Emergencia 1', 'Tel. Emergencia 2', 'Tel. Emergencia 3',
+    // Laboral
+    'Nivel Académico', 'Cargo', 'Área de Trabajo', 'Sector', 'Vinculación',
+  ];
 
   const aspAOA = [
     ...encabezadoMayzer('Aspirantes del Grupo', `${g.nombre} · Total: ${inscritos}`),
@@ -77,20 +92,68 @@ function construirWorkbook(g, fechaInicioFmt, fechaFinFmt) {
     ...aspirantes.map((a, ri) =>
       [
         ri + 1,
-        a.nombre_completo   || '—',
+        a.nombre1           || '—',
+        a.nombre2           || '—',
+        a.apellido1         || '—',
+        a.apellido2         || '—',
         a.tipo_documento    || '—',
         a.numero_documento  || '—',
         a.email             || '—',
         a.telefono          || '—',
-        a.empresa           || '—',
+        a.fecha_nacimiento  || '—',
         a.curso_requerido   || '—',
-        a.inscripcion_estado || a.estado || '—',
+        a.estado            || '—',
+        a.inscripcion_estado || '—',
+        a.created_at        || '—',
+        a.motivo_rechazo    || '—',
+        // Solicitud
+        a.solicitud_num_aspirantes ?? '—',
+        a.solicitud_observaciones  || '—',
+        a.solicitud_fecha          || '—',
+        // Empresa
+        a.empresa            || '—',
+        a.nit                || '—',
+        a.tipo_entidad       || '—',
+        a.empresa_email      || '—',
+        a.empresa_telefono   || '—',
+        a.empresa_direccion  || '—',
+        a.empresa_ciudad     || '—',
+        a.empresa_departamento || '—',
+        a.empresa_nombre_contacto || '—',
+        a.empresa_cargo_contacto  || '—',
+        // Médico
+        a.medico_tipo_sangre  || '—',
+        a.medico_eps          || '—',
+        a.medico_arl          || '—',
+        a.medico_antecedentes || '—',
+        a.medico_medicamentos || '—',
+        // Contacto de emergencia
+        a.contacto_nombre     || '—',
+        a.contacto_telefono   || '—',
+        a.contacto_telefono2  || '—',
+        a.contacto_telefono3  || '—',
+        // Laboral
+        a.laboral_nivel_academico || '—',
+        a.laboral_cargo           || '—',
+        a.laboral_area_trabajo    || '—',
+        a.laboral_sector          || '—',
+        a.laboral_vinculacion     || '—',
       ].map(v => ({ v: v ?? '', t: typeof v === 'number' ? 'n' : 's', s: estCelda(v, ri) }))
     ),
   ];
 
   const wsAsp = XLSX.utils.aoa_to_sheet(aspAOA);
-  wsAsp['!cols']   = [4, 30, 10, 18, 28, 14, 22, 22, 16].map(w => ({ wch: w }));
+  wsAsp['!cols']   = [
+    4, 16, 16, 16, 16,
+    10, 18, 26, 14, 14,
+    22, 16, 16, 14, 24,
+    12, 28, 13,
+    22, 14, 14, 24, 14,
+    24, 16, 16, 20, 18,
+    10, 22, 22, 26, 22,
+    20, 16, 16, 16,
+    18, 20, 20, 16, 16,
+  ].map(w => ({ wch: w }));
   wsAsp['!rows']   = [{ hpt: 22 }, { hpt: 16 }, { hpt: 14 }, { hpt: 8 }];
   wsAsp['!merges'] = [
     { s: { r: 0, c: 0 }, e: { r: 0, c: COLS.length - 1 } },
